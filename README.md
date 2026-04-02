@@ -1,59 +1,67 @@
-# Frontend
+# Melono Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.6.
+Dự án này được phát triển bằng [Angular CLI](https://github.com/angular/angular-cli) phiên bản hiện đại kết hợp với **Tailwind CSS v4**.
 
-## Development server
+## 🚀 Hướng Dẫn Clone & Chạy Dự Án (Dành cho Team)
 
-To start a local development server, run:
+Khi bạn clone dự án này từ GitHub về một cấu hình máy tính mới, hãy làm theo các bước chuẩn sau đây để đảm bảo mọi thứ chạy mượt mà ngay lập tức.
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Bước 1: Tải Code
+Giải nén hoặc clone thẳng mã nguồn từ Repository nhánh chính:
 
 ```bash
-ng generate component component-name
+git clone <link-repo-github>
+cd Melono
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Bước 2: Cài Đặt Thư Viện Thiếu
+Thư mục `node_modules/` khổng lồ đã bị chặn tải lên qua Git. Tại bước này, bạn phải yêu cầu máy tính rà soát và tải lại các thư viện mà dự án đang sử dụng (Angular, Tailwind, CSS plugins...):
 
 ```bash
-ng generate --help
+npm install
 ```
 
-## Building
-
-To build the project run:
+### Bước 3: Khởi Động Máy Chủ Ngay
+Bạn không cần thiết lập gì thêm do toàn bộ đường link trỏ Backend hay API Public Key đã được cắm sẵn tại các file cấu hình `src/environments/`. Khởi chạy luồng lập trình bằng:
 
 ```bash
-ng build
+npm start
 ```
+*(Lưu ý: Nếu máy không nhận, bạn có thể chạy bằng `ng serve` hoặc cài bổ trợ Angular bằng cách chạy `npm install -g @angular/cli` )*
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+### Bước 4: Tận hưởng kết quả
+Mở trình duyệt bất kỳ của bạn để xem Website phát trực tiếp ở cổng tĩnh mặc định:
+👉 **http://localhost:4200/**
 
-## Running unit tests
+Website sẽ liên tục tự động reload lại bản mới nhất nếu bạn thay đổi mã nguồn, hãy thả hồn sửa code nhé!
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+---
+## 🧰 Các Lệnh Angular CLI Hay Dùng (Cheat Sheet)
+
+Nếu máy bạn chưa có `ng`, bạn có thể phết thêm chữ `npx` lên đầu (VD: `npx ng...`) hoặc cài toàn cục trên máy bằng: `npm install -g @angular/cli`.
+
+### 1. Tạo Component / Trang Mới (Pages)
+Tạo một mảnh ghép giao diện mới. Phím tắt lệnh là `ng g c` thay cho `ng generate component`.
 
 ```bash
-ng test
+# Tạo một component lẻ tẻ
+ng generate component ten-component
+
+# Tạo Component gộp vào chung một cấu trúc thư mục (Ví dụ thư mục auth)
+ng generate component pages/auth/login
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+### 2. Tạo Service
+Service dùng để chứa Logic xử lý data (như gọi API lấy khóa học, xử lý đăng nhập) tách biệt hoàn toàn khỏi giao diện HTML.
 
 ```bash
-ng e2e
+ng generate service services/api
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### 3. Build Code Đẩy Lên Mạng
+Lệnh này nén toàn bộ HTML, CSS và JavaScript của web lại ở dạng siêu tối ưu nhất, phục vụ việc tung lên Vercel, Netlify hoặc đưa cho Backend:
 
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+npm run build
+# Các file nén xịn xò sẽ trả về trong thư mục `/dist/frontend/browser/`
+```
