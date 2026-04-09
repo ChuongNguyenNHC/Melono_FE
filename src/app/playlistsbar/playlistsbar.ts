@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PlayerComponent } from '../player/player';
 
 export interface MyPlaylist {
   id: number;
@@ -9,7 +10,7 @@ export interface MyPlaylist {
 @Component({
   selector: 'app-playlistsbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PlayerComponent],
   templateUrl: './playlistsbar.html',
   styleUrl: './playlistsbar.css',
 })

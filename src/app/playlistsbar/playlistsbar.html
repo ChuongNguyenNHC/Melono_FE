@@ -1,5 +1,5 @@
-<div class="h-full bg-[#121212] flex flex-col transition-all duration-300 ease-in-out border-r border-white/5"
-     [class.w-72]="isExpanded" [class.w-20]="!isExpanded">
+<div class="h-full bg-[#121212] flex flex-col transition-all duration-300 ease-in-out border-r border-white/5 relative"
+     [class.w-80]="isExpanded" [class.w-20]="!isExpanded">
   
   <!-- Header of Sidebar -->
   <div class="p-4 flex items-center justify-between mb-2" [class.flex-col]="!isExpanded">
@@ -53,7 +53,7 @@
   </div>
 
   <!-- Playlists Container (Scrollable) -->
-  <div class="flex-1 overflow-y-auto px-2 pb-4 scrollbar-hide">
+  <div class="flex-1 overflow-y-auto px-2 pb-4 scrollbar-hide mb-[12rem]">
     <ul class="space-y-1">
       <li *ngFor="let playlist of playlists">
         <a href="#" class="flex items-center p-2 rounded-md hover:bg-white/10 transition-colors group"
@@ -72,6 +72,10 @@
       </li>
     </ul>
   </div>
+
+  <!-- Embedded Player -->
+  <app-player [isExpanded]="isExpanded" class="absolute bottom-0 w-full left-0"></app-player>
+
 </div>
 
 <style>
