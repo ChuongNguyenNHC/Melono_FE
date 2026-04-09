@@ -12,8 +12,14 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/login/login').then(m => m.Login)
   },
   {
-    path: '',
+    path: 'auth/login',
     redirectTo: '/login',
+    pathMatch: 'full'
+  },
+  {
+    path: '',
+    title: 'Trang chủ | Melono',
+    loadComponent: () => import('./landing/landing').then(m => m.Landing),
     pathMatch: 'full'
   }
 ];

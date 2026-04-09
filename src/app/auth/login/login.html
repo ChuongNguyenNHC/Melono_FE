@@ -39,7 +39,7 @@
                             <i class="bx bx-envelope text-[22px] text-gray-400 
                                 group-focus-within:text-[#1ed760] transition-colors"></i>
                         </div>
-                        <input type="email" placeholder="Email của bạn" class="
+                        <input type="email" [(ngModel)]="email" name="email" placeholder="Email của bạn" class="
                             w-full pl-12 pr-4 py-3.5 bg-[#252533] 
                             border border-transparent rounded-xl 
                             focus:outline-none focus:border-[#1ed760] focus:ring-1 focus:ring-[#1ed760] 
@@ -50,7 +50,7 @@
                             <i class="bx bx-lock-alt text-[22px] text-gray-400 
                                 group-focus-within:text-[#1ed760] transition-colors"></i>
                         </div>
-                        <input type="password" placeholder="Mật khẩu" class="
+                        <input type="password" [(ngModel)]="password" name="password" placeholder="Mật khẩu" class="
                             w-full pl-12 pr-4 py-3.5 bg-[#252533] 
                             border border-transparent rounded-xl 
                             focus:outline-none focus:border-[#1ed760] focus:ring-1 focus:ring-[#1ed760] 
@@ -67,7 +67,7 @@
                         <a href="/forget" class="text-sm text-[#1ed760] hover:text-[#1bc055] transition-colors">Quên mật
                             khẩu?</a>
                     </div>
-                    <button class="
+                    <button type="button" (click)="onLogin()" class="
                         w-full py-3.5 mt-6 bg-[#1ed760] hover:bg-[#1bc055] text-black 
                         rounded-xl font-bold text-[15px] 
                         shadow-[0_0_20px_rgba(30,215,96,0.2)] hover:shadow-[0_0_25px_rgba(30,215,96,0.4)] 
