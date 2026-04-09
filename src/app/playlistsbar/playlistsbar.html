@@ -1,1 +1,95 @@
-<p>playlistsbar works!</p>
+<div class="h-full bg-[#121212] flex flex-col transition-all duration-300 ease-in-out border-r border-white/5"
+     [class.w-72]="isExpanded" [class.w-20]="!isExpanded">
+  
+  <!-- Header of Sidebar -->
+  <div class="p-4 flex items-center justify-between mb-2" [class.flex-col]="!isExpanded">
+    
+    <!-- Library Title + Toggle Icon -->
+    <div class="flex items-center gap-2">
+      <button (click)="toggleSidebar()" 
+              class="flex items-center gap-4 text-gray-400 hover:text-white transition-colors p-2 rounded-md hover:bg-white/5"
+              [title]="isExpanded ? 'Thu gọn thư viện' : 'Mở rộng thư viện'">
+        <i class='bx bx-library text-2xl' [class.text-white]="!isExpanded"></i>
+        <span *ngIf="isExpanded" class="font-bold text-[15px]">Thư viện của bạn</span>
+      </button>
+    </div>
+    
+    <!-- Explicit Arrow Toggle & Create Button -->
+    <div class="flex items-center gap-2" [class.mt-4]="!isExpanded">
+      <button *ngIf="!isExpanded" (click)="toggleSidebar()" 
+              class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+              title="Mở rộng thư viện">
+        <i class='bx bx-right-arrow-alt text-xl'></i>
+      </button>
+      
+      <button *ngIf="isExpanded" (click)="createPlaylist()"
+              class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-colors tooltip"
+              title="Tạo playlist mới">
+        <i class='bx bx-plus text-xl'></i>
+      </button>
+      <button *ngIf="!isExpanded" (click)="createPlaylist()"
+              class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+              title="Tạo playlist mới">
+        <i class='bx bx-plus text-xl'></i>
+      </button>
+      
+      <!-- Arrow toggle left when expanded -->
+      <button *ngIf="isExpanded" (click)="toggleSidebar()" 
+              class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+              title="Thu gọn">
+        <i class='bx bx-left-arrow-alt text-xl'></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters/Pills (only when expanded) -->
+  <div *ngIf="isExpanded" class="px-4 mb-4 flex gap-2">
+    <button class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm transition-colors">
+      Playlists
+    </button>
+    <button class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm transition-colors">
+      Nghệ sĩ
+    </button>
+  </div>
+
+  <!-- Playlists Container (Scrollable) -->
+  <div class="flex-1 overflow-y-auto px-2 pb-4 scrollbar-hide">
+    <ul class="space-y-1">
+      <li *ngFor="let playlist of playlists">
+        <a href="#" class="flex items-center p-2 rounded-md hover:bg-white/10 transition-colors group"
+           [class.justify-center]="!isExpanded">
+          <!-- Artwork block placeholder -->
+          <div class="w-12 h-12 bg-gray-800 rounded flex-shrink-0 flex items-center justify-center shadow-md">
+            <i class='bx bxs-playlist text-gray-400 text-xl group-hover:text-white transition-colors'></i>
+          </div>
+          
+          <!-- Playlist Info -->
+          <div *ngIf="isExpanded" class="ml-3 overflow-hidden flex-1">
+            <p class="text-[15px] font-medium text-white truncate group-hover:text-[#1ed760] transition-colors">{{ playlist.name }}</p>
+            <p class="text-sm text-gray-400 truncate">Playlist • Melono</p>
+          </div>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  /* Custom scrollbar for sidebar to make it cleaner like Spotify */
+  .scrollbar-hide::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollbar-hide::-webkit-scrollbar-track {
+    background: transparent; 
+  }
+  .scrollbar-hide::-webkit-scrollbar-thumb {
+    background: transparent; 
+    border-radius: 4px;
+  }
+  .scrollbar-hide:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2); 
+  }
+  .scrollbar-hide::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4); 
+  }
+</style>
