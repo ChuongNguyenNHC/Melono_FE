@@ -1,16 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Playlistsbar } from '../playlistsbar/playlistsbar';
 import { Footer } from '../footer/footer';
-
-interface Song {
-  id: number;
-  title: string;
-  artist: string;
-  coverUrl: string;
-  duration: string;
-  plays: string;
-}
+import { MusicService, Song } from '../services/music.service';
+import { PlayerService } from '../services/player.service';
 
 interface Playlist {
   id: number;
@@ -26,49 +19,15 @@ interface Playlist {
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })
-export class Landing {
-  topSongs: Song[] = [
-    {
-      id: 1,
-      title: 'Blinding Lights',
-      artist: 'The Weeknd',
-      coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200&auto=format&fit=crop',
-      duration: '3:20',
-      plays: '3.4B'
-    },
-    {
-      id: 2,
-      title: 'Shape of You',
-      artist: 'Ed Sheeran',
-      coverUrl: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92b?q=80&w=200&auto=format&fit=crop',
-      duration: '3:53',
-      plays: '3.3B'
-    },
-    {
-      id: 3,
-      title: 'Someone You Loved',
-      artist: 'Lewis Capaldi',
-      coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=200&auto=format&fit=crop',
-      duration: '3:02',
-      plays: '2.8B'
-    },
-    {
-      id: 4,
-      title: 'Sunflower',
-      artist: 'Post Malone, Swae Lee',
-      coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=200&auto=format&fit=crop',
-      duration: '2:38',
-      plays: '2.5B'
-    },
-    {
-      id: 5,
-      title: 'As It Was',
-      artist: 'Harry Styles',
-      coverUrl: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=200&auto=format&fit=crop',
-      duration: '2:47',
-      plays: '2.3B'
-    }
-  ];
+export class Landing implements OnInit {
+  musicService = inject(MusicService);
+  playerService = inject(PlayerService);
+
+  topSongs: Song[] = [];
+  recentSongs: Song[] = [];
+
+  showAllPlaylists = false;
+  showAllSongs = false;
 
   topPlaylists: Playlist[] = [
     {
@@ -94,41 +53,54 @@ export class Landing {
       title: 'Focus Flow',
       description: 'Uptempo instrumental hip hop to help you focus.',
       coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=300&auto=format&fit=crop'
+    },
+    {
+      id: 5,
+      title: 'Workout Beast',
+      description: 'Get pumped with these high-energy tracks.',
+      coverUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=300&auto=format&fit=crop'
+    },
+    {
+      id: 6,
+      title: 'Acoustic Covers',
+      description: 'Beautiful acoustic renditions of popular songs.',
+      coverUrl: 'https://images.unsplash.com/photo-1542283620-30b1bc7e4df8?q=80&w=300&auto=format&fit=crop'
+    },
+    {
+      id: 7,
+      title: 'Midnight Jazz',
+      description: 'Late night jazz to wind down your day.',
+      coverUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=300&auto=format&fit=crop'
+    },
+    {
+      id: 8,
+      title: 'Electronic Dance',
+      description: 'The best EDM tracks for your weekend party.',
+      coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=300&auto=format&fit=crop'
     }
   ];
 
-  recentSongs: Song[] = [
-    {
-      id: 101,
-      title: 'Levitating',
-      artist: 'Dua Lipa',
-      coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=200&auto=format&fit=crop',
-      duration: '3:23',
-      plays: '1.8B'
-    },
-    {
-      id: 102,
-      title: 'Watermelon Sugar',
-      artist: 'Harry Styles',
-      coverUrl: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=200&auto=format&fit=crop',
-      duration: '2:54',
-      plays: '2.1B'
-    },
-    {
-      id: 103,
-      title: 'STAY',
-      artist: 'The Kid LAROI, Justin Bieber',
-      coverUrl: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?q=80&w=200&auto=format&fit=crop',
-      duration: '2:21',
-      plays: '2.7B'
-    },
-    {
-      id: 104,
-      title: 'Good 4 U',
-      artist: 'Olivia Rodrigo',
-      coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=200&auto=format&fit=crop',
-      duration: '2:58',
-      plays: '1.9B'
-    }
-  ];
+  toggleShowAllPlaylists() {
+    this.showAllPlaylists = !this.showAllPlaylists;
+  }
+
+  toggleShowAllSongs() {
+    this.showAllSongs = !this.showAllSongs;
+  }
+
+  ngOnInit() {
+    this.musicService.searchSongs('pop 2024', 12).subscribe({
+      next: (songs) => this.topSongs = songs,
+      error: (err) => console.error('Failed to fetch top songs', err)
+    });
+
+    this.musicService.searchSongs('vpop', 4).subscribe({
+      next: (songs) => this.recentSongs = songs,
+      error: (err) => console.error('Failed to fetch recent songs', err)
+    });
+  }
+
+  playSong(song: Song) {
+    this.playerService.playSong(song);
+  }
 }
