@@ -1,99 +1,252 @@
-<div class="flex h-[calc(100vh-64px)] w-full overflow-hidden bg-[#0d0d12]">
-  <!-- Sidebar Component -->
-  <app-playlistsbar></app-playlistsbar>
+<div class="flex h-full w-full overflow-hidden bg-[#0d0d12]">  <!-- Main Content Area Scrollable -->
+  <main class="flex-1 overflow-y-auto text-white font-sans scrollbar-hide relative bg-[#0d0d12]">
 
-  <!-- Main Content Area Scrollable -->
-  <main class="flex-1 overflow-y-auto text-white p-8 font-sans pb-24 scrollbar-hide">
-  
-  <!-- Hero Section (Optional Welcome) -->
-  <div class="mb-10">
-    <h1 class="text-4xl font-bold tracking-tight mb-2">Chào buổi sáng</h1>
-    <p class="text-gray-400">Những giai điệu đang chờ bạn khám phá hôm nay.</p>
-  </div>
+    <!-- Content Container -->
+    <div class="relative z-10 p-8 pb-24">
 
-  <!-- Recently Played Section -->
-  <section class="mb-14">
-    <h2 class="text-2xl font-bold mb-6 hover:underline cursor-pointer">Nghe gần đây</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div *ngFor="let song of recentSongs" 
-           (click)="playSong(song)"
-           class="group flex items-center bg-white/5 hover:bg-white/20 rounded-md overflow-hidden cursor-pointer transition-colors relative">
-        <img [src]="song.coverUrl" [alt]="song.title" class="w-16 h-16 object-cover shadow-md">
-        <span class="font-bold text-white px-4 truncate flex-1">{{ song.title }}</span>
-        <!-- Small play button -->
-        <button class="absolute right-4 w-10 h-10 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-lg hover:scale-105">
-          <i class='bx bx-play text-2xl ml-1'></i>
-        </button>
+      <!-- Hero Section -->
+      <div class="mb-10 mt-6">
+        <h1 class="text-4xl font-bold tracking-tight mb-2">{{ greeting }}</h1>
+        <p class="text-gray-300">Những giai điệu đang chờ bạn khám phá hôm nay.</p>
       </div>
-    </div>
-  </section>
 
-  <!-- Top Playlists Section -->
-  <section class="mb-14">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold hover:underline cursor-pointer">Playlist được phát nhiều nhất</h2>
-      <a href="javascript:void(0)" (click)="toggleShowAllPlaylists()" class="text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider">
-        {{ showAllPlaylists ? 'Ẩn bớt' : 'Xem tất cả' }}
-      </a>
-    </div>
-    
-    <div [ngClass]="showAllPlaylists ? 'grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-6' : 'flex overflow-x-auto gap-6 pb-6 pt-2 scrollbar-hide -mx-2 px-2'">
-      <div *ngFor="let playlist of topPlaylists" 
-           class="group p-4 bg-[#181818] hover:bg-[#282828] rounded-md cursor-pointer transition-colors duration-300 relative"
-           [ngClass]="showAllPlaylists ? 'w-full' : 'min-w-[180px] w-[180px] flex-shrink-0'">
-        <!-- Cover Art -->
-        <div class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
-          <img [src]="playlist.coverUrl" [alt]="playlist.title" class="w-full h-full object-cover">
-          <!-- Play Button Overlay -->
-          <button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
-            <i class='bx bx-play text-3xl ml-1'></i>
-          </button>
+      <!-- Recently Played Section -->
+      <section class="mb-14">
+        <h2 class="text-2xl font-bold mb-6 hover:underline cursor-pointer">Nghe gần đây</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div *ngFor="let song of recentSongs" (click)="playSong(song, recentSongs)"
+            class="group flex items-center bg-white/5 hover:bg-white/20 rounded-md overflow-hidden cursor-pointer transition-colors relative">
+            <img [src]="song.coverUrl" [alt]="song.title" class="w-16 h-16 object-cover shadow-md">
+            <span class="font-bold text-white px-4 truncate flex-1">{{ song.title }}</span>
+            <!-- Small play button -->
+            <button
+              class="absolute right-4 w-10 h-10 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-lg hover:scale-105">
+              <i class='bx bx-play text-2xl ml-1'></i>
+            </button>
+          </div>
         </div>
-        <!-- Info -->
-        <h3 class="font-bold text-white mb-1 truncate">{{ playlist.title }}</h3>
-        <p class="text-sm text-gray-400 line-clamp-2">{{ playlist.description }}</p>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <!-- Top Songs Section (List) -->
-  <section>
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold hover:underline cursor-pointer">Các bài hát được nghe nhiều nhất</h2>
-      <a href="javascript:void(0)" (click)="toggleShowAllSongs()" class="text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider">
-        {{ showAllSongs ? 'Ẩn bớt' : 'Xem tất cả' }}
-      </a>
-    </div>
-
-    <!-- Container -->
-    <div [ngClass]="showAllSongs ? 'grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-6' : 'flex overflow-x-auto gap-6 pb-6 pt-2 scrollbar-hide -mx-2 px-2'">
-      <!-- Mapped Songs as Cards -->
-      <div *ngFor="let song of topSongs" 
-           (click)="playSong(song)"
-           class="group p-4 bg-[#181818] hover:bg-[#282828] rounded-md cursor-pointer transition-colors duration-300 flex flex-col relative"
-           [ngClass]="showAllSongs ? 'w-full' : 'min-w-[180px] w-[180px] flex-shrink-0'">
-        
-        <!-- Cover Art -->
-        <div class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
-          <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover">
-          <!-- Play Button Overlay -->
-          <button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
-            <i class='bx bx-play text-3xl ml-1'></i>
-          </button>
+      <!-- Top Charts Section (List View) -->
+      <section class="mb-14">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold hover:underline cursor-pointer">Bảng xếp hạng (TopHits)</h2>
+          <a href="javascript:void(0)"
+            class="text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider">
+            Xem tất cả
+          </a>
         </div>
-        
-        <!-- Info -->
-        <div class="flex flex-col">
-          <h3 class="font-bold text-[15px] text-white mb-1 truncate" [title]="song.title">{{ song.title }}</h3>
-          <p class="text-[13px] text-gray-400 truncate" [title]="song.artist">{{ song.artist }}</p>
+        <div class="flex flex-col space-y-2">
+          <div *ngFor="let song of chartSongs; let i = index" (click)="playSong(song, chartSongs)"
+            class="group flex items-center justify-between p-2 hover:bg-white/10 rounded-md cursor-pointer transition-colors">
+            <!-- Left side: Rank, Cover, Info -->
+            <div class="flex items-center space-x-4">
+              <span class="text-gray-400 font-bold w-6 text-right">{{ i + 1 }}</span>
+              <div class="relative w-12 h-12 shadow-md rounded-md overflow-hidden bg-[#282828]">
+                <img [src]="song.coverUrl" class="w-full h-full object-cover">
+                <!-- Play icon overlay -->
+                <div
+                  class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <i class='bx bx-play text-white text-xl'></i>
+                </div>
+              </div>
+              <div class="flex flex-col">
+                <span
+                  class="font-bold text-white group-hover:text-[#1ed760] transition-colors truncate max-w-[200px] sm:max-w-[300px]">{{
+                  song.title }}</span>
+                <span class="text-sm text-gray-400 hover:underline truncate">{{ song.artist }}</span>
+              </div>
+            </div>
+            <!-- Right side: Plays, Duration -->
+            <div class="flex items-center space-x-6 text-gray-400 text-sm">
+              <span class="hidden md:inline-block">{{ song.plays }} lượt nghe</span>
+              <span class="hidden sm:inline-block text-right w-12">{{ song.duration }}</span>
+              <button class="text-gray-400 hover:text-white transition-colors duration-200">
+                <i class='bx bx-dots-horizontal-rounded text-xl'></i>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <!-- Global Footer -->
-  <app-footer></app-footer>
+      <!-- Top Artists Section -->
+      <section class="mb-14">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold hover:underline cursor-pointer">Nghệ sĩ nổi bật</h2>
+          <a href="javascript:void(0)"
+            class="text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider">
+            Xem tất cả
+          </a>
+        </div>
 
+        <div class="flex overflow-x-auto gap-6 pb-6 pt-2 scrollbar-hide -mx-2 px-2">
+          <div *ngFor="let artist of topArtists"
+            class="group p-4 bg-[#181818] hover:bg-[#282828] rounded-md cursor-pointer transition-colors duration-300 flex flex-col items-center min-w-[180px] w-[180px] shrink-0 relative">
+            <!-- Circle Cover Art -->
+            <div
+              class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-full">
+              <img [src]="artist.imageUrl" [alt]="artist.name" class="w-full h-full object-cover">
+              <!-- Play Button Overlay -->
+              <button
+                class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
+                <i class='bx bx-play text-3xl ml-1'></i>
+              </button>
+            </div>
+            <!-- Info -->
+            <h3 class="font-bold text-white mb-1 truncate w-full text-center">{{ artist.name }}</h3>
+            <p
+              class="text-sm text-gray-400 bg-[#282828] group-hover:bg-[#383838] px-3 py-1 rounded-full mt-2 transition-colors">
+              Nghệ sĩ</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Top Playlists Section -->
+      <section class="mb-14">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold hover:underline cursor-pointer">Playlist được phát nhiều nhất</h2>
+          <a href="javascript:void(0)" (click)="toggleShowAllPlaylists()"
+            class="text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider">
+            {{ showAllPlaylists ? 'Ẩn bớt' : 'Xem tất cả' }}
+          </a>
+        </div>
+
+        <div
+          [ngClass]="showAllPlaylists ? 'grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-6' : 'flex overflow-x-auto gap-6 pb-6 pt-2 scrollbar-hide -mx-2 px-2'">
+          <div *ngFor="let playlist of topPlaylists" (click)="navigateToPlaylist(playlist.id)"
+            class="group p-4 bg-[#181818] hover:bg-[#282828] rounded-md cursor-pointer transition-colors duration-300 relative"
+            [ngClass]="showAllPlaylists ? 'w-full' : 'min-w-[180px] w-[180px] shrink-0'">
+            <!-- Cover Art -->
+            <div
+              class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
+              <img [src]="playlist.coverUrl" [alt]="playlist.title" class="w-full h-full object-cover">
+              <!-- Play Button Overlay -->
+              <button
+                class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
+                <i class='bx bx-play text-3xl ml-1'></i>
+              </button>
+            </div>
+            <!-- Info -->
+            <h3 class="font-bold text-white mb-1 truncate">{{ playlist.title }}</h3>
+            <p class="text-sm text-gray-400 line-clamp-2">{{ playlist.description }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Top Songs Section (List) -->
+      <section>
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold hover:underline cursor-pointer">Các bài hát được nghe nhiều nhất</h2>
+          <a href="javascript:void(0)" (click)="toggleShowAllSongs()"
+            class="text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider">
+            {{ showAllSongs ? 'Ẩn bớt' : 'Xem tất cả' }}
+          </a>
+        </div>
+
+        <!-- Container -->
+        <div
+          [ngClass]="showAllSongs ? 'grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-6' : 'flex overflow-x-auto gap-6 pb-6 pt-2 scrollbar-hide -mx-2 px-2'">
+          <!-- Mapped Songs as Cards -->
+          <div *ngFor="let song of topSongs" (click)="playSong(song, topSongs)"
+            class="group p-4 bg-[#181818] hover:bg-[#282828] rounded-md cursor-pointer transition-colors duration-300 flex flex-col relative"
+            [ngClass]="showAllSongs ? 'w-full' : 'min-w-[180px] w-[180px] shrink-0'">
+
+            <!-- Cover Art -->
+            <div
+              class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
+              <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover">
+              <!-- Play Button Overlay -->
+              <button
+                class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
+                <i class='bx bx-play text-3xl ml-1'></i>
+              </button>
+            </div>
+
+            <!-- Info -->
+            <div class="flex flex-col">
+              <h3 class="font-bold text-[15px] text-white mb-1 truncate" [title]="song.title">{{ song.title }}</h3>
+              <p class="text-[13px] text-gray-400 truncate" [title]="song.artist">{{ song.artist }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- V-Pop Hits Section -->
+      <section class="mb-14">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold hover:underline cursor-pointer">Nhạc Việt Tuyển Chọn</h2>
+        </div>
+        <div class="flex overflow-x-auto gap-6 pb-6 pt-2 scrollbar-hide -mx-2 px-2">
+          <div *ngFor="let song of vpopSongs" (click)="playSong(song, vpopSongs)"
+            class="group p-4 bg-[#181818] hover:bg-[#282828] rounded-md cursor-pointer transition-colors duration-300 flex flex-col relative min-w-[180px] w-[180px] shrink-0">
+            <div
+              class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
+              <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover">
+              <button
+                class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
+                <i class='bx bx-play text-3xl ml-1'></i>
+              </button>
+            </div>
+            <div class="flex flex-col">
+              <h3 class="font-bold text-[15px] text-white mb-1 truncate" [title]="song.title">{{ song.title }}</h3>
+              <p class="text-[13px] text-gray-400 truncate" [title]="song.artist">{{ song.artist }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- US-UK Hits Section -->
+      <section class="mb-14">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold hover:underline cursor-pointer">US-UK Đỉnh Cao</h2>
+        </div>
+        <div class="flex overflow-x-auto gap-6 pb-6 pt-2 scrollbar-hide -mx-2 px-2">
+          <div *ngFor="let song of usukSongs" (click)="playSong(song, usukSongs)"
+            class="group p-4 bg-[#181818] hover:bg-[#282828] rounded-md cursor-pointer transition-colors duration-300 flex flex-col relative min-w-[180px] w-[180px] shrink-0">
+            <div
+              class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
+              <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover">
+              <button
+                class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
+                <i class='bx bx-play text-3xl ml-1'></i>
+              </button>
+            </div>
+            <div class="flex flex-col">
+              <h3 class="font-bold text-[15px] text-white mb-1 truncate" [title]="song.title">{{ song.title }}</h3>
+              <p class="text-[13px] text-gray-400 truncate" [title]="song.artist">{{ song.artist }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- K-Pop Hits Section -->
+      <section class="mb-14">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold hover:underline cursor-pointer">K-Pop Sôi Động</h2>
+        </div>
+        <div class="flex overflow-x-auto gap-6 pb-6 pt-2 scrollbar-hide -mx-2 px-2">
+          <div *ngFor="let song of kpopSongs" (click)="playSong(song, kpopSongs)"
+            class="group p-4 bg-[#181818] hover:bg-[#282828] rounded-md cursor-pointer transition-colors duration-300 flex flex-col relative min-w-[180px] w-[180px] shrink-0">
+            <div
+              class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
+              <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover">
+              <button
+                class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
+                <i class='bx bx-play text-3xl ml-1'></i>
+              </button>
+            </div>
+            <div class="flex flex-col">
+              <h3 class="font-bold text-[15px] text-white mb-1 truncate" [title]="song.title">{{ song.title }}</h3>
+              <p class="text-[13px] text-gray-400 truncate" [title]="song.artist">{{ song.artist }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Global Footer -->
+      <app-footer></app-footer>
+
+    </div> <!-- End Content Container -->
   </main>
 </div>
 
@@ -101,17 +254,21 @@
   .scrollbar-hide::-webkit-scrollbar {
     width: 10px;
   }
+
   .scrollbar-hide::-webkit-scrollbar-track {
-    background: transparent; 
+    background: transparent;
   }
+
   .scrollbar-hide::-webkit-scrollbar-thumb {
-    background: transparent; 
+    background: transparent;
     border-radius: 5px;
   }
+
   .scrollbar-hide:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1); 
+    background: rgba(255, 255, 255, 0.1);
   }
+
   .scrollbar-hide::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3); 
+    background: rgba(255, 255, 255, 0.3);
   }
 </style>

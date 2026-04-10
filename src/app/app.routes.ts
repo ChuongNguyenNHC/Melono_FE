@@ -21,5 +21,15 @@ export const routes: Routes = [
     title: 'Trang chủ | Melono',
     loadComponent: () => import('./landing/landing').then(m => m.Landing),
     pathMatch: 'full'
+  },
+  {
+    path: 'playlist/:id',
+    title: 'Playlist | Melono',
+    loadComponent: () => import('./playlistdetail/playlistdetail').then(m => m.PlaylistDetail)
+  },
+  {
+    path: 'search',
+    title: 'Tìm kiếm | Melono',
+    loadComponent: () => import('./search/search').then(m => m.Search)
   }
 ];

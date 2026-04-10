@@ -1,0 +1,122 @@
+<div class="flex-1 overflow-y-auto text-white font-sans scrollbar-hide relative bg-[#121212] h-full">
+
+  <!-- Header Section with Dynamic Gradient -->
+  <div class="relative pt-24 px-8 pb-8 flex items-end gap-6 h-[340px] bg-linear-to-b {{ playlistData.bgColor }} to-[#121212]">
+    <!-- Cover -->
+    <div class="w-[232px] h-[232px] shadow-[0_4px_60px_rgba(0,0,0,0.5)] shrink-0 group relative">
+      <img [src]="playlistData.coverUrl" alt="Cover" class="w-full h-full object-cover">
+    </div>
+
+    <!-- Info -->
+    <div class="flex flex-col gap-2 z-10">
+      <span class="text-sm font-bold uppercase tracking-wider">Playlist</span>
+      <h1 class="text-[5rem] font-bold tracking-tighter leading-none mb-4 cursor-default">{{ playlistData.title }}</h1>
+      <p class="text-sm text-white/70">{{ playlistData.description }}</p>
+      
+      <div class="flex items-center gap-1.5 text-sm mt-1">
+        <!-- Logo -->
+        <div class="w-6 h-6 rounded-full bg-[#1ed760] flex items-center justify-center shrink-0">
+          <i class='bx bxs-music text-black text-xs'></i>
+        </div>
+        <span class="font-bold hover:underline cursor-pointer">Melono</span>
+        <span class="text-white/70">•</span>
+        <span class="text-white/70">{{ songs.length }} bài hát,</span>
+        <span class="text-white/70">khoảng 1 giờ 15 phút</span>
+      </div>
+    </div>
+
+    <!-- Dark Overlay for blending -->
+    <div class="absolute inset-0 bg-black/20 z-0"></div>
+    <div class="absolute inset-0 bg-linear-to-t from-[#121212] to-transparent h-1/2 mt-auto z-0"></div>
+  </div>
+
+  <!-- Content Section -->
+  <div class="relative z-10 px-8 pb-20 bg-black/20">
+    
+    <!-- Action Bar -->
+    <div class="flex items-center gap-8 py-6">
+      <button (click)="playAll()" title="Phát Playlist" class="w-14 h-14 bg-[#1ed760] hover:bg-[#1fdf64] hover:scale-105 text-black rounded-full flex items-center justify-center transition-all shadow-lg">
+        <i class='bx bx-play text-4xl ml-1'></i>
+      </button>
+      <button class="text-gray-400 hover:text-white transition-colors" title="Lưu vào Thư viện">
+        <i class='bx bx-heart text-4xl'></i>
+      </button>
+      <button class="text-gray-400 hover:text-white transition-colors">
+        <i class='bx bx-dots-horizontal-rounded text-3xl'></i>
+      </button>
+    </div>
+
+    <!-- Table Header -->
+    <div class="flex items-center text-sm text-gray-400 border-b border-white/10 pb-2 mb-4 px-4 bg-[#121212]">
+      <div class="w-12 text-center">#</div>
+      <div class="flex-1">Tiêu đề</div>
+      <div class="flex-1 hidden md:block">Album</div>
+      <div class="w-32 hidden lg:block">Nghệ sĩ</div>
+      <div class="w-16 text-center"><i class='bx bx-time-five text-lg'></i></div>
+    </div>
+
+    <!-- Track List -->
+    <div class="flex flex-col space-y-1">
+      <div *ngFor="let song of songs; let i = index" 
+           (click)="playSong(song)"
+           class="group flex items-center p-2 hover:bg-white/10 rounded-md cursor-pointer transition-colors">
+        
+        <!-- Index & Play icon -->
+        <div class="w-12 text-center relative flex items-center justify-center">
+          <span class="text-gray-400 group-hover:opacity-0">{{ i + 1 }}</span>
+          <i class='bx bx-play text-white text-xl absolute opacity-0 group-hover:opacity-100'></i>
+        </div>
+
+        <!-- Title & Cover -->
+        <div class="flex-1 flex items-center gap-3">
+          <img [src]="song.coverUrl" class="w-10 h-10 object-cover rounded shadow-md shrink-0">
+          <div class="flex flex-col overflow-hidden pr-4">
+            <span class="text-white font-medium truncate group-hover:text-[#1ed760] transition-colors">{{ song.title }}</span>
+            <span class="text-gray-400 text-sm hover:underline md:hidden truncate">{{ song.artist }}</span>
+          </div>
+        </div>
+
+        <!-- Album -->
+        <div class="flex-1 hidden md:block text-gray-400 text-sm hover:underline truncate pr-4">
+          {{ song.title }} - Single
+        </div>
+
+        <!-- Artist (Extra Column for PC) -->
+        <div class="w-32 hidden lg:block text-gray-400 text-sm hover:underline truncate pr-4">
+          {{ song.artist }}
+        </div>
+
+        <!-- Heart & Duration -->
+        <div class="w-16 flex items-center justify-center gap-4 text-gray-400 text-sm">
+          <button class="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity"><i class='bx bx-heart'></i></button>
+          <span>{{ song.duration }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-20">
+      <app-footer></app-footer>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  .scrollbar-hide::-webkit-scrollbar {
+    width: 10px;
+  }
+  .scrollbar-hide::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-hide::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 5px;
+  }
+  .scrollbar-hide:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .scrollbar-hide::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+</style>
