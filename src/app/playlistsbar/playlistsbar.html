@@ -53,13 +53,13 @@
   </div>
 
   <!-- Playlists Container (Scrollable) -->
-  <div class="flex-1 overflow-y-auto px-2 pb-4 scrollbar-hide mb-[12rem]">
+  <div class="flex-1 overflow-y-auto px-2 pb-48 scrollbar-hide">
     <ul class="space-y-1">
       <li *ngFor="let playlist of playlists">
         <a href="#" class="flex items-center p-2 rounded-md hover:bg-white/10 transition-colors group"
            [class.justify-center]="!isExpanded">
           <!-- Artwork block placeholder -->
-          <div class="w-12 h-12 bg-gray-800 rounded flex-shrink-0 flex items-center justify-center shadow-md">
+          <div class="w-12 h-12 bg-gray-800 rounded shrink-0 flex items-center justify-center shadow-md">
             <i class='bx bxs-playlist text-gray-400 text-xl group-hover:text-white transition-colors'></i>
           </div>
           

@@ -27,7 +27,7 @@
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i class="bx bx-search text-[22px] text-gray-400 group-focus-within:text-white transition-colors"></i>
             </div>
-            <input type="text" placeholder="Bạn muốn nghe bài hát nào?" class="
+            <input type="text" placeholder="Bạn muốn nghe bài hát nào?" (keyup.enter)="onSearch($event)" (input)="onSearchInput($event)" class="
                 w-full pl-10 pr-4 py-2.5 bg-[#1c1c28] hover:bg-[#252533] focus:bg-[#252533]
                 border border-transparent rounded-full 
                 focus:outline-none focus:border-white/20 

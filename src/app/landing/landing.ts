@@ -1,6 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Playlistsbar } from '../playlistsbar/playlistsbar';
+import { Router } from '@angular/router';
 import { Footer } from '../footer/footer';
 import { MusicService, Song } from '../services/music.service';
 import { PlayerService } from '../services/player.service';
@@ -12,29 +12,57 @@ interface Playlist {
   coverUrl: string;
 }
 
+interface Artist {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
+
+interface Mood {
+  id: number;
+  name: string;
+  color: string;
+  bgColor: string;
+}
+
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, Playlistsbar, Footer],
+  imports: [CommonModule, Footer],
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })
 export class Landing implements OnInit {
   musicService = inject(MusicService);
   playerService = inject(PlayerService);
+  cdr = inject(ChangeDetectorRef);
+  router = inject(Router);
 
   topSongs: Song[] = [];
   recentSongs: Song[] = [];
+  
+  navigateToPlaylist(id: number) {
+    this.router.navigate(['/playlist', id]);
+  }
+  
+  vpopSongs: Song[] = [];
+  usukSongs: Song[] = [];
+  kpopSongs: Song[] = [];
+  chartSongs: Song[] = [];
 
   showAllPlaylists = false;
   showAllSongs = false;
+  
+  greeting = 'Chào buổi sáng';
+
+  topArtists: Artist[] = [];
 
   topPlaylists: Playlist[] = [
     {
       id: 1,
       title: 'Today\'s Top Hits',
       description: 'The most played songs right now.',
-      coverUrl: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f92b?q=80&w=300&auto=format&fit=crop'
+      coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=300&auto=format&fit=crop'
     },
     {
       id: 2,
@@ -64,7 +92,7 @@ export class Landing implements OnInit {
       id: 6,
       title: 'Acoustic Covers',
       description: 'Beautiful acoustic renditions of popular songs.',
-      coverUrl: 'https://images.unsplash.com/photo-1542283620-30b1bc7e4df8?q=80&w=300&auto=format&fit=crop'
+      coverUrl: 'https://images.unsplash.com/photo-1458560871784-56d23406c091?q=80&w=300&auto=format&fit=crop'
     },
     {
       id: 7,
@@ -89,18 +117,79 @@ export class Landing implements OnInit {
   }
 
   ngOnInit() {
+    this.setGreeting();
+
     this.musicService.searchSongs('pop 2024', 12).subscribe({
-      next: (songs) => this.topSongs = songs,
+      next: (songs) => {
+        this.topSongs = songs;
+        this.cdr.detectChanges();
+      },
       error: (err) => console.error('Failed to fetch top songs', err)
     });
 
     this.musicService.searchSongs('vpop', 4).subscribe({
-      next: (songs) => this.recentSongs = songs,
+      next: (songs) => {
+        this.recentSongs = songs;
+        this.cdr.detectChanges();
+      },
       error: (err) => console.error('Failed to fetch recent songs', err)
+    });
+
+    this.musicService.getTopArtists('trending pop', 6).subscribe({
+      next: (artists) => {
+        this.topArtists = artists;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Failed to fetch top artists', err)
+    });
+
+    // Keep search fallback for general queries
+    this.musicService.searchSongs('nhạc việt', 12).subscribe({
+      next: (songs) => {
+        this.vpopSongs = songs;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error(err)
+    });
+
+    this.musicService.fetchChart('us', 12).subscribe({
+      next: (songs) => {
+        this.usukSongs = songs;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error(err)
+    });
+
+    this.musicService.fetchChart('kr', 12).subscribe({
+      next: (songs) => {
+        this.kpopSongs = songs;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error(err)
+    });
+
+    this.musicService.fetchChart('vn', 10).subscribe({
+      next: (songs) => {
+        this.chartSongs = songs;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error(err)
     });
   }
 
-  playSong(song: Song) {
-    this.playerService.playSong(song);
+  setGreeting() {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      this.greeting = 'Chào buổi sáng';
+    } else if (hour < 18) {
+      this.greeting = 'Chào buổi chiều';
+    } else {
+      this.greeting = 'Chào buổi tối';
+    }
+  }
+
+  playSong(song: Song, context?: Song[]) {
+    this.playerService.playSong(song, context || this.topSongs);
   }
 }
+
