@@ -1,0 +1,78 @@
+<section class="space-y-6">
+  <div class="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_80px_rgba(2,6,23,0.35)]">
+    <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">Qu&#7843;n l&yacute; th&#7875; lo&#7841;i</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">Qu&#7843;n l&yacute; th&#7875; lo&#7841;i</h1>
+    <p class="mt-2 text-sm text-slate-400">Th&#7875; lo&#7841;i d&ugrave;ng &#273;&#7875; ph&acirc;n lo&#7841;i b&agrave;i h&aacute;t v&agrave; h&#7895; tr&#7907; kh&aacute;m ph&aacute;.</p>
+
+    <form class="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]" (ngSubmit)="submit()">
+      <input
+        [(ngModel)]="genreName"
+        name="genreName"
+        placeholder="Nh&#7853;p t&ecirc;n th&#7875; lo&#7841;i m&#7899;i"
+        class="h-12 rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+      />
+      <button class="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">
+        <i class='bx bx-plus text-lg'></i>
+        Th&ecirc;m th&#7875; lo&#7841;i
+      </button>
+    </form>
+  </div>
+
+  <div class="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/70 shadow-[0_24px_80px_rgba(2,6,23,0.3)]">
+    <table class="min-w-full text-left text-sm text-slate-300">
+      <thead class="bg-slate-900/95 text-slate-400">
+        <tr class="border-b border-white/10">
+          <th class="px-4 py-4 font-medium">M&atilde; th&#7875; lo&#7841;i</th>
+          <th class="px-4 py-4 font-medium">T&ecirc;n th&#7875; lo&#7841;i</th>
+          <th class="px-4 py-4 font-medium">Ngu&#7891;n t&#7841;o</th>
+          <th class="px-4 py-4 font-medium">Ng&agrave;y t&#7841;o</th>
+          <th class="px-4 py-4 text-right font-medium">Thao t&aacute;c</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/10">
+        <tr *ngFor="let genre of genres" class="hover:bg-white/[0.03]">
+          <td class="px-4 py-4 text-slate-500">{{ genre.id }}</td>
+          <td class="px-4 py-4 font-semibold text-white">{{ genre.name }}</td>
+          <td class="px-4 py-4">
+            <span
+              class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+              [ngClass]="genre.createdBy === 'ARTIST_REQUEST'
+                ? 'bg-cyan-400/10 text-cyan-200 ring-1 ring-inset ring-cyan-300/20'
+                : 'bg-slate-400/10 text-slate-300 ring-1 ring-inset ring-white/10'"
+            >
+              {{ sourceLabel(genre) }}
+            </span>
+          </td>
+          <td class="px-4 py-4">{{ genre.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-4 py-4">
+            <div *ngIf="canManage(genre); else lockedGenre" class="flex justify-end gap-2">
+              <button
+                type="button"
+                (click)="approveGenre.emit(genre.id)"
+                class="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-emerald-400/30 px-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/10 hover:text-emerald-100"
+                title="Ch&#7845;p nh&#7853;n th&#7875; lo&#7841;i n&agrave;y th&agrave;nh th&#7875; lo&#7841;i ch&iacute;nh th&#7913;c"
+              >
+                <i class='bx bx-check text-lg'></i>
+                Ch&#7845;p nh&#7853;n
+              </button>
+              <button
+                type="button"
+                (click)="deleteGenre.emit(genre.id)"
+                class="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-rose-400/30 px-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/10 hover:text-rose-100"
+                title="X&oacute;a th&#7875; lo&#7841;i do ng&#432;&#7901;i d&ugrave;ng t&#7841;o khi &#273;&#259;ng k&yacute; ngh&#7879; s&#297;"
+              >
+                <i class='bx bx-trash text-lg'></i>
+                X&oacute;a
+              </button>
+            </div>
+            <ng-template #lockedGenre>
+              <div class="text-right">
+                <span class="text-xs text-slate-600">Kh&oacute;a</span>
+              </div>
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

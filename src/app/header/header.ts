@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService, User } from '../services/auth.service';
+import { MusicLibraryService } from '../services/music-library.service';
 import { Observable, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -15,6 +16,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 export class Header implements OnInit {
   currentUser$: Observable<User | null>;
   router = inject(Router);
+  private readonly musicLibraryService = inject(MusicLibraryService);
   private searchSubject = new Subject<string>();
 
   constructor(private authService: AuthService) {
@@ -50,5 +52,13 @@ export class Header implements OnInit {
 
   logout() {
     this.authService.logout();
+  }
+
+  isArtistContext(): boolean {
+    const currentUser = this.musicLibraryService.snapshot.users.find(
+      user => user.id === this.musicLibraryService.currentUserId
+    );
+
+    return currentUser?.role === 'ARTIST' || this.router.url.startsWith('/artist');
   }
 }

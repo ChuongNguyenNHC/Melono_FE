@@ -1,122 +1,125 @@
-<div class="flex-1 overflow-y-auto text-white font-sans scrollbar-hide relative bg-[#121212] h-full">
+<div class="relative h-full flex-1 overflow-y-auto bg-[#121212] font-sans text-white scrollbar-hide">
+  <div class="relative flex min-h-[360px] items-end gap-6 bg-linear-to-b px-8 pb-9 pt-24" [ngClass]="playlistData.bgColor">
+    <button type="button" (click)="goBackToLibrary()" class="absolute left-8 top-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white transition hover:bg-black/50">
+      <i class='bx bx-chevron-left text-3xl'></i>
+    </button>
 
-  <!-- Header Section with Dynamic Gradient -->
-  <div class="relative pt-24 px-8 pb-8 flex items-end gap-6 h-[340px] bg-linear-to-b {{ playlistData.bgColor }} to-[#121212]">
-    <!-- Cover -->
-    <div class="w-[232px] h-[232px] shadow-[0_4px_60px_rgba(0,0,0,0.5)] shrink-0 group relative">
-      <img [src]="playlistData.coverUrl" alt="Cover" class="w-full h-full object-cover">
+    <div *ngIf="playlistData.coverUrl" class="absolute inset-0 z-0">
+      <img [src]="playlistData.coverUrl" [alt]="playlistData.title" class="h-full w-full scale-110 object-cover opacity-35 blur-2xl" />
     </div>
 
-    <!-- Info -->
-    <div class="flex flex-col gap-2 z-10">
-      <span class="text-sm font-bold uppercase tracking-wider">Playlist</span>
-      <h1 class="text-[5rem] font-bold tracking-tighter leading-none mb-4 cursor-default">{{ playlistData.title }}</h1>
-      <p class="text-sm text-white/70">{{ playlistData.description }}</p>
-      
-      <div class="flex items-center gap-1.5 text-sm mt-1">
-        <!-- Logo -->
-        <div class="w-6 h-6 rounded-full bg-[#1ed760] flex items-center justify-center shrink-0">
-          <i class='bx bxs-music text-black text-xs'></i>
+    <div class="relative z-10 h-[232px] w-[232px] shrink-0 overflow-hidden rounded-md shadow-[0_4px_60px_rgba(0,0,0,0.5)]">
+      <img *ngIf="playlistData.coverUrl; else localCover" [src]="playlistData.coverUrl" [alt]="playlistData.title" class="h-full w-full object-cover" />
+      <ng-template #localCover>
+        <div class="flex h-full w-full items-end bg-linear-to-br p-5" [ngClass]="getTheme(selectedTheme)">
+          <i class='bx bx-list-music text-7xl text-black/35'></i>
         </div>
-        <span class="font-bold hover:underline cursor-pointer">Melono</span>
-        <span class="text-white/70">•</span>
-        <span class="text-white/70">{{ songs.length }} bài hát,</span>
-        <span class="text-white/70">khoảng 1 giờ 15 phút</span>
+      </ng-template>
+    </div>
+
+    <div class="relative z-10 min-w-0 pb-2">
+      <span class="text-sm font-bold uppercase tracking-wider">Playlist</span>
+      <h1 class="mt-3 line-clamp-2 text-5xl font-bold leading-none tracking-tight lg:text-7xl">{{ playlistData.title }}</h1>
+      <p class="mt-4 max-w-2xl text-sm text-white/75">{{ playlistData.description }}</p>
+      <div class="mt-3 flex items-center gap-2 text-sm">
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#1ed760] text-black">
+          <i class='bx bxs-music text-xs'></i>
+        </span>
+        <span class="font-bold">Melono</span>
+        <span class="text-white/60">•</span>
+        <span class="text-white/70">{{ songs.length }} bài hát</span>
+        <span *ngIf="localPlaylist" class="text-white/60">•</span>
+        <span *ngIf="localPlaylist" class="text-white/70">{{ localPlaylist.status === 'PUBLIC' ? 'Công khai' : 'Riêng tư' }}</span>
       </div>
     </div>
 
-    <!-- Dark Overlay for blending -->
-    <div class="absolute inset-0 bg-black/20 z-0"></div>
-    <div class="absolute inset-0 bg-linear-to-t from-[#121212] to-transparent h-1/2 mt-auto z-0"></div>
+    <div class="absolute inset-0 z-0 bg-black/45"></div>
+    <div class="absolute inset-x-0 bottom-0 z-0 h-40 bg-linear-to-t from-[#121212] to-transparent"></div>
   </div>
 
-  <!-- Content Section -->
-  <div class="relative z-10 px-8 pb-20 bg-black/20">
-    
-    <!-- Action Bar -->
-    <div class="flex items-center gap-8 py-6">
-      <button (click)="playAll()" title="Phát Playlist" class="w-14 h-14 bg-[#1ed760] hover:bg-[#1fdf64] hover:scale-105 text-black rounded-full flex items-center justify-center transition-all shadow-lg">
-        <i class='bx bx-play text-4xl ml-1'></i>
+  <div class="relative z-10 bg-black/20 px-8 pb-24">
+    <div class="flex flex-wrap items-center gap-5 py-6">
+      <button (click)="playAll()" title="Phát playlist" class="flex h-14 w-14 items-center justify-center rounded-full bg-[#1ed760] text-black shadow-lg transition hover:scale-105 hover:bg-[#1fdf64]">
+        <i class='bx bx-play ml-1 text-4xl'></i>
       </button>
-      <button class="text-gray-400 hover:text-white transition-colors" title="Lưu vào Thư viện">
-        <i class='bx bx-heart text-4xl'></i>
+      <button (click)="sharePlaylist()" class="flex h-11 items-center gap-2 rounded-full bg-white/10 px-5 text-sm font-bold text-white transition hover:bg-white/15">
+        <i class='bx bx-share-alt text-lg'></i>
+        Chia sẻ
       </button>
-      <button class="text-gray-400 hover:text-white transition-colors">
-        <i class='bx bx-dots-horizontal-rounded text-3xl'></i>
+      <button *ngIf="localPlaylist" type="button" (click)="deletePlaylist()" class="flex h-11 items-center gap-2 rounded-full bg-red-500/15 px-5 text-sm font-bold text-red-200 transition hover:bg-red-500/25">
+        <i class='bx bx-trash text-lg'></i>
+        Xóa playlist
       </button>
+      <span *ngIf="shareMessage" class="text-sm font-semibold text-[#1ed760]">{{ shareMessage }}</span>
     </div>
 
-    <!-- Table Header -->
-    <div class="flex items-center text-sm text-gray-400 border-b border-white/10 pb-2 mb-4 px-4 bg-[#121212]">
-      <div class="w-12 text-center">#</div>
-      <div class="flex-1">Tiêu đề</div>
-      <div class="flex-1 hidden md:block">Album</div>
-      <div class="w-32 hidden lg:block">Nghệ sĩ</div>
-      <div class="w-16 text-center"><i class='bx bx-time-five text-lg'></i></div>
-    </div>
-
-    <!-- Track List -->
-    <div class="flex flex-col space-y-1">
-      <div *ngFor="let song of songs; let i = index" 
-           (click)="playSong(song)"
-           class="group flex items-center p-2 hover:bg-white/10 rounded-md cursor-pointer transition-colors">
-        
-        <!-- Index & Play icon -->
-        <div class="w-12 text-center relative flex items-center justify-center">
-          <span class="text-gray-400 group-hover:opacity-0">{{ i + 1 }}</span>
-          <i class='bx bx-play text-white text-xl absolute opacity-0 group-hover:opacity-100'></i>
-        </div>
-
-        <!-- Title & Cover -->
-        <div class="flex-1 flex items-center gap-3">
-          <img [src]="song.coverUrl" class="w-10 h-10 object-cover rounded shadow-md shrink-0">
-          <div class="flex flex-col overflow-hidden pr-4">
-            <span class="text-white font-medium truncate group-hover:text-[#1ed760] transition-colors">{{ song.title }}</span>
-            <span class="text-gray-400 text-sm hover:underline md:hidden truncate">{{ song.artist }}</span>
+    <section *ngIf="localPlaylist" class="mb-8 rounded-xl border border-white/10 bg-[#181818] p-5">
+      <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <div>
+          <p class="text-sm font-bold uppercase tracking-[0.18em] text-[#1ed760]">Chỉnh playlist</p>
+          <div class="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_160px]">
+            <input [(ngModel)]="editingName" name="editingName" class="h-12 rounded-2xl border border-white/10 bg-[#24242d] px-4 text-sm outline-none transition focus:border-[#1ed760]" />
+            <select [(ngModel)]="editingStatus" name="editingStatus" class="h-12 rounded-2xl border border-white/10 bg-[#24242d] px-4 text-sm outline-none transition focus:border-[#1ed760]">
+              <option value="PRIVATE">Riêng tư</option>
+              <option value="PUBLIC">Công khai</option>
+            </select>
           </div>
+
+          <div class="mt-3">
+            <label class="inline-flex h-12 cursor-pointer items-center justify-center rounded-2xl bg-white/10 px-5 text-sm font-bold transition hover:bg-white/15">
+              Chọn ảnh
+              <input type="file" accept="image/*" class="hidden" (change)="onCoverFileSelected($event)" />
+            </label>
+          </div>
+
+          <button type="button" (click)="savePlaylist()" class="mt-4 rounded-full bg-[#1ed760] px-5 py-3 text-sm font-bold text-black transition hover:scale-105">
+            Lưu thay đổi
+          </button>
         </div>
 
-        <!-- Album -->
-        <div class="flex-1 hidden md:block text-gray-400 text-sm hover:underline truncate pr-4">
-          {{ song.title }} - Single
-        </div>
-
-        <!-- Artist (Extra Column for PC) -->
-        <div class="w-32 hidden lg:block text-gray-400 text-sm hover:underline truncate pr-4">
-          {{ song.artist }}
-        </div>
-
-        <!-- Heart & Duration -->
-        <div class="w-16 flex items-center justify-center gap-4 text-gray-400 text-sm">
-          <button class="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity"><i class='bx bx-heart'></i></button>
-          <span>{{ song.duration }}</span>
+        <div class="overflow-hidden rounded-xl bg-white/[0.04]">
+          <img *ngIf="editingCoverUrl; else previewCover" [src]="editingCoverUrl" alt="Ảnh playlist" class="aspect-video w-full object-cover" />
+          <ng-template #previewCover>
+            <div class="aspect-video bg-linear-to-br" [ngClass]="getTheme(selectedTheme)"></div>
+          </ng-template>
         </div>
       </div>
+    </section>
+
+    <div class="mb-4 grid grid-cols-[48px_minmax(0,1fr)_minmax(160px,0.8fr)_80px] items-center border-b border-white/10 px-4 pb-2 text-sm text-gray-400">
+      <div class="text-center">#</div>
+      <div>Tiêu đề</div>
+      <div class="hidden md:block">Nghệ sĩ</div>
+      <div class="text-center"><i class='bx bx-time-five text-lg'></i></div>
     </div>
 
-    <!-- Footer -->
+    <div class="flex flex-col gap-1">
+      <button *ngFor="let song of songs; let i = index" type="button" (click)="playSong(song)" class="group grid grid-cols-[48px_minmax(0,1fr)_minmax(160px,0.8fr)_80px] items-center rounded-md p-2 text-left transition hover:bg-white/10">
+        <div class="relative flex items-center justify-center">
+          <span class="text-gray-400 group-hover:opacity-0">{{ i + 1 }}</span>
+          <i class='bx bx-play absolute text-xl text-white opacity-0 group-hover:opacity-100'></i>
+        </div>
+        <div class="flex min-w-0 items-center gap-3">
+          <img [src]="song.coverUrl" [alt]="song.title" class="h-11 w-11 shrink-0 rounded object-cover shadow-md" />
+          <div class="min-w-0">
+            <p class="truncate font-medium transition group-hover:text-[#1ed760]">{{ song.title }}</p>
+            <p class="truncate text-sm text-gray-400 md:hidden">{{ song.artist }}</p>
+          </div>
+        </div>
+        <div class="hidden truncate pr-4 text-sm text-gray-400 md:block">{{ song.artist }}</div>
+        <div class="flex items-center justify-center gap-3 text-sm text-gray-400">
+          <i class='bx bx-heart opacity-0 transition group-hover:opacity-100'></i>
+          <span>{{ song.duration }}</span>
+        </div>
+      </button>
+    </div>
+
+    <div *ngIf="!songs.length" class="rounded-xl border border-white/10 bg-white/[0.03] py-16 text-center text-sm text-gray-400">
+      Playlist này chưa có bài hát.
+    </div>
+
     <div class="mt-20">
       <app-footer></app-footer>
     </div>
   </div>
-
 </div>
-
-<style>
-  .scrollbar-hide::-webkit-scrollbar {
-    width: 10px;
-  }
-  .scrollbar-hide::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .scrollbar-hide::-webkit-scrollbar-thumb {
-    background: transparent;
-    border-radius: 5px;
-  }
-  .scrollbar-hide:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-  }
-  .scrollbar-hide::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-</style>

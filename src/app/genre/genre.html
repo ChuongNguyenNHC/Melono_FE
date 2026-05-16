@@ -1,0 +1,115 @@
+<section class="h-full overflow-y-auto bg-[#0d0d12] px-8 py-8 pb-28 text-white">
+  <div class="mx-auto max-w-7xl space-y-14">
+    <header>
+      <h1 class="text-4xl font-bold tracking-tight">Chủ đề & Thể loại</h1>
+      <p class="mt-2 text-gray-400">Khám phá nhanh các dòng nhạc phổ biến từ iTunes.</p>
+    </header>
+
+    <section *ngIf="genres$ | async">
+      <div class="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <h2 class="text-2xl font-bold">Thể loại</h2>
+        <div class="relative w-full md:w-80">
+          <i class='bx bx-search absolute left-4 top-1/2 -translate-y-1/2 text-xl text-gray-500'></i>
+          <input
+            type="text"
+            [(ngModel)]="genreSearch"
+            placeholder="Tìm thể loại"
+            class="h-11 w-full rounded-full border border-white/10 bg-[#181818] pl-11 pr-4 text-sm outline-none transition focus:border-[#1ed760]"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <button *ngFor="let genre of filteredGenres; let i = index" type="button" (click)="scrollToGenre(genre.name)" class="group relative h-24 overflow-hidden rounded-xl px-5 py-4 text-left transition hover:scale-[1.015]"
+          [ngClass]="[
+            i % 4 === 0 ? 'bg-[#8d67ab]' : '',
+            i % 4 === 1 ? 'bg-[#ba5d07]' : '',
+            i % 4 === 2 ? 'bg-[#148a08]' : '',
+            i % 4 === 3 ? 'bg-[#e13300]' : ''
+          ]">
+          <h3 class="relative z-10 text-xl font-bold">{{ genre.name }}</h3>
+          <i class='bx bx-music absolute -bottom-5 -right-4 rotate-12 text-7xl text-black/20 transition group-hover:scale-110'></i>
+        </button>
+      </div>
+    </section>
+
+    <section #popSection>
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-2xl font-bold">Pop nổi bật</h2>
+        <button type="button" (click)="toggleSection('pop')" class="text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white">
+          {{ isExpanded('pop') ? 'Thu gọn' : 'Xem tất cả' }}
+        </button>
+      </div>
+      <div class="relative" [ngClass]="isExpanded('pop') ? '' : 'after:pointer-events-none after:absolute after:right-0 after:top-0 after:h-full after:w-20 after:bg-linear-to-l after:from-[#0d0d12] after:to-transparent'">
+        <div [ngClass]="isExpanded('pop') ? 'grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-6' : 'flex gap-6 overflow-x-auto pb-2 scrollbar-hide'">
+          <article *ngFor="let song of popSongs" (click)="playGenreSong(song, 'pop')" class="group cursor-pointer rounded-md bg-[#181818] p-4 transition hover:bg-[#282828]" [ngClass]="isExpanded('pop') ? '' : 'w-[180px] shrink-0'">
+            <ng-container *ngTemplateOutlet="songCard; context: { song: song }"></ng-container>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section #rapSection>
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-2xl font-bold">Rap / Hip-hop</h2>
+        <button type="button" (click)="toggleSection('rap')" class="text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white">
+          {{ isExpanded('rap') ? 'Thu gọn' : 'Xem tất cả' }}
+        </button>
+      </div>
+      <div class="relative" [ngClass]="isExpanded('rap') ? '' : 'after:pointer-events-none after:absolute after:right-0 after:top-0 after:h-full after:w-20 after:bg-linear-to-l after:from-[#0d0d12] after:to-transparent'">
+        <div [ngClass]="isExpanded('rap') ? 'grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-6' : 'flex gap-6 overflow-x-auto pb-2 scrollbar-hide'">
+          <article *ngFor="let song of rapSongs" (click)="playGenreSong(song, 'rap')" class="group cursor-pointer rounded-md bg-[#181818] p-4 transition hover:bg-[#282828]" [ngClass]="isExpanded('rap') ? '' : 'w-[180px] shrink-0'">
+            <ng-container *ngTemplateOutlet="songCard; context: { song: song }"></ng-container>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section #acousticSection>
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-2xl font-bold">Acoustic / Ballad</h2>
+        <button type="button" (click)="toggleSection('acoustic')" class="text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white">
+          {{ isExpanded('acoustic') ? 'Thu gọn' : 'Xem tất cả' }}
+        </button>
+      </div>
+      <div class="relative" [ngClass]="isExpanded('acoustic') ? '' : 'after:pointer-events-none after:absolute after:right-0 after:top-0 after:h-full after:w-20 after:bg-linear-to-l after:from-[#0d0d12] after:to-transparent'">
+        <div [ngClass]="isExpanded('acoustic') ? 'grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-6' : 'flex gap-6 overflow-x-auto pb-2 scrollbar-hide'">
+          <article *ngFor="let song of acousticSongs" (click)="playGenreSong(song, 'acoustic')" class="group cursor-pointer rounded-md bg-[#181818] p-4 transition hover:bg-[#282828]" [ngClass]="isExpanded('acoustic') ? '' : 'w-[180px] shrink-0'">
+            <ng-container *ngTemplateOutlet="songCard; context: { song: song }"></ng-container>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-2xl font-bold">BXH iTunes Việt Nam</h2>
+        <span class="text-sm font-bold uppercase tracking-wider text-gray-500">Top songs</span>
+      </div>
+      <div class="space-y-2">
+        <button *ngFor="let song of chartSongs; let i = index" type="button" (click)="playItunesSong(song)" class="group flex w-full items-center justify-between rounded-md p-2 transition hover:bg-white/10">
+          <div class="flex min-w-0 items-center gap-4">
+            <span class="w-6 text-right font-bold" [ngClass]="i < 3 ? 'text-[#1ed760]' : 'text-gray-500'">{{ i + 1 }}</span>
+            <img [src]="song.coverUrl" [alt]="song.title" class="h-12 w-12 rounded object-cover" />
+            <div class="min-w-0 text-left">
+              <p class="truncate font-bold group-hover:text-[#1ed760]">{{ song.title }}</p>
+              <p class="truncate text-sm text-gray-500">{{ song.artist }}</p>
+            </div>
+          </div>
+          <span class="hidden text-sm text-gray-500 sm:block">{{ song.duration }}</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <ng-template #songCard let-song="song">
+    <div class="relative aspect-square overflow-hidden rounded-md">
+      <img [src]="song.coverUrl" [alt]="song.title" class="h-full w-full object-cover" />
+      <button class="absolute bottom-2 right-2 flex h-12 w-12 translate-y-2 items-center justify-center rounded-full bg-[#1ed760] text-black opacity-0 shadow-xl transition group-hover:translate-y-0 group-hover:opacity-100">
+        <i class='bx bx-play text-3xl'></i>
+      </button>
+    </div>
+    <h3 class="mt-4 truncate font-bold">{{ song.title }}</h3>
+    <p class="mt-1 truncate text-sm text-gray-400">{{ song.artist }}</p>
+  </ng-template>
+</section>

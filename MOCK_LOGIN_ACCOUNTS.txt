@@ -1,0 +1,16 @@
+Tai khoan dang nhap mock de test Melono
+
+User thuong
+Ten dang nhap: user
+Email: user@melono.local
+Mat khau: user123
+
+Nghe si
+Ten dang nhap: artist
+Email: artist@melono.local
+Mat khau: artist123
+
+Admin
+Ten dang nhap: admin
+Email: admin@melono.local
+Mat khau: admin123

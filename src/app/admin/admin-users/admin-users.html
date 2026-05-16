@@ -1,0 +1,92 @@
+<section class="space-y-6">
+  <div class="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_80px_rgba(2,6,23,0.35)]">
+    <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">Qu&#7843;n l&yacute; ng&#432;&#7901;i d&ugrave;ng</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">Qu&#7843;n l&yacute; ng&#432;&#7901;i d&ugrave;ng</h1>
+    <p class="mt-2 text-sm text-slate-400">Theo d&otilde;i t&agrave;i kho&#7843;n kh&aacute;ch/ng&#432;&#7901;i d&ugrave;ng, ngh&#7879; s&#297; v&agrave; qu&#7843;n tr&#7883; vi&ecirc;n; kh&oacute;a ho&#7863;c m&#7903; kh&oacute;a khi c&#7847;n.</p>
+
+    <div class="mt-6 grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_220px_220px_auto]">
+      <div class="relative">
+        <i class='bx bx-search absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400'></i>
+        <input type="text" [ngModel]="search" (ngModelChange)="searchChange.emit($event)" placeholder="T&igrave;m theo t&ecirc;n, username ho&#7863;c email" class="h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 pl-11 text-sm text-slate-100 outline-none transition focus:border-emerald-400" />
+      </div>
+
+      <select [ngModel]="roleFilter" (ngModelChange)="roleFilterChange.emit($event)" class="h-12 rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-slate-100 outline-none transition focus:border-emerald-400">
+        <option value="ALL">T&#7845;t c&#7843; vai tr&ograve;</option>
+        <option value="USER">Ng&#432;&#7901;i d&ugrave;ng</option>
+        <option value="ARTIST">Ngh&#7879; s&#297;</option>
+        <option value="ADMIN">Qu&#7843;n tr&#7883; vi&ecirc;n</option>
+      </select>
+
+      <select [ngModel]="statusFilter" (ngModelChange)="statusFilterChange.emit($event)" class="h-12 rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-slate-100 outline-none transition focus:border-emerald-400">
+        <option value="ALL">T&#7845;t c&#7843; tr&#7841;ng th&aacute;i</option>
+        <option value="Active">Ho&#7841;t &#273;&#7897;ng</option>
+        <option value="Banned">B&#7883; kh&oacute;a</option>
+      </select>
+
+      <button type="button" (click)="refresh.emit()" class="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white/5 px-5 text-sm font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10">
+        <i class='bx bx-refresh text-lg'></i>
+        L&agrave;m m&#7899;i
+      </button>
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/70 shadow-[0_24px_80px_rgba(2,6,23,0.3)]">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left text-sm text-slate-300">
+        <thead class="bg-slate-900/95 text-slate-400">
+          <tr class="border-b border-white/10">
+            <th class="px-4 py-4 font-medium">T&agrave;i kho&#7843;n</th>
+            <th class="px-4 py-4 font-medium">Email</th>
+            <th class="px-4 py-4 font-medium">Vai tr&ograve;</th>
+            <th class="px-4 py-4 font-medium">Tr&#7841;ng th&aacute;i</th>
+            <th class="px-4 py-4 font-medium">Playlist</th>
+            <th class="px-4 py-4 font-medium">&#272;&atilde; th&iacute;ch</th>
+            <th class="px-4 py-4 font-medium text-right">H&agrave;nh &#273;&#7897;ng</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-white/10">
+          <tr *ngFor="let user of users; trackBy: trackById" class="hover:bg-white/[0.03]">
+            <td class="px-4 py-4">
+              <div class="flex items-center gap-3">
+                <img [src]="user.avatar" [alt]="user.name" class="h-12 w-12 rounded-full object-cover" />
+                <div>
+                  <p class="font-semibold text-white">{{ user.name }}</p>
+                  <p class="mt-1 text-xs text-slate-500">{{ user.username }}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-4">{{ user.email }}</td>
+            <td class="px-4 py-4 font-medium" [ngClass]="getUserRoleClass(user.role)">{{ getUserRoleLabel(user.role) }}</td>
+            <td class="px-4 py-4 font-medium" [ngClass]="getUserStatusClass(user.status)">{{ getUserStatusLabel(user.status) }}</td>
+            <td class="px-4 py-4">{{ user.playlistCount }}</td>
+            <td class="px-4 py-4">{{ user.likedSongsCount }}</td>
+            <td class="px-4 py-4">
+              <div class="flex flex-wrap justify-end gap-2">
+                <button type="button" (click)="openDrawer.emit(user)" class="inline-flex items-center gap-2 rounded-full bg-slate-800 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700">
+                  <i class='bx bx-show text-base'></i>
+                  Xem
+                </button>
+                <button *ngIf="user.status === 'Active' && user.role !== 'ADMIN'" type="button" (click)="ban.emit(user)" class="inline-flex items-center gap-2 rounded-full bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-500">
+                  <i class='bx bx-user-x text-base'></i>
+                  Kh&oacute;a
+                </button>
+                <button *ngIf="user.status === 'Banned' && user.role !== 'ADMIN'" type="button" (click)="unban.emit(user)" class="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400">
+                  <i class='bx bx-user-check text-base'></i>
+                  M&#7903; kh&oacute;a
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="users.length === 0">
+            <td colspan="7" class="px-6 py-16 text-center text-slate-500">
+              <i class='bx bx-user text-5xl'></i>
+              <p class="mt-3 text-sm">Kh&ocirc;ng t&igrave;m th&#7845;y ng&#432;&#7901;i d&ugrave;ng ph&ugrave; h&#7907;p</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
