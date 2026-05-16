@@ -1,0 +1,144 @@
+<div *ngIf="isOpen" class="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm" (click)="close.emit()">
+  <div class="h-full w-full max-w-xl overflow-y-auto border-l border-white/10 bg-slate-950 p-6 shadow-2xl" (click)="$event.stopPropagation()">
+    <div class="flex items-start justify-between gap-4">
+      <h2 class="mt-2 text-2xl font-semibold text-white">
+        {{
+          drawerType === 'song'
+            ? 'Nghe thử bài hát'
+            : drawerType === 'user'
+              ? 'Thông tin người dùng'
+              : 'Chi tiết yêu cầu nghệ sĩ'
+        }}
+      </h2>
+
+      <button type="button" (click)="close.emit()" class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/5 text-slate-300 transition hover:bg-white/10">
+        <i class='bx bx-x text-2xl'></i>
+      </button>
+    </div>
+
+    <ng-container *ngIf="drawerType === 'song' && selectedSong as song">
+      <div class="mt-6">
+        <img [src]="song.thumbnail" [alt]="song.title" class="h-56 w-full rounded-[2rem] object-cover" />
+        <div class="mt-5">
+          <h3 class="text-2xl font-semibold text-white">{{ song.title }}</h3>
+          <p class="mt-2 text-base text-slate-400">{{ song.artist }}</p>
+        </div>
+        <div class="mt-5 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+          <audio controls class="w-full">
+            <source [src]="song.audioUrl" type="audio/mpeg" />
+          </audio>
+        </div>
+        <div class="mt-5 grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 text-sm text-slate-300">
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Album</span><span>{{ song.album }}</span></div>
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Nguồn</span><span>{{ getSongSourceLabel(song.source) }}</span></div>
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Thời lượng</span><span>{{ song.duration }}</span></div>
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Ngày tạo</span><span>{{ song.createdAt }}</span></div>
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-slate-500">Trạng thái</span>
+            <span class="font-medium" [ngClass]="getSongStatusClass(song.status)">{{ getSongStatusLabel(song.status) }}</span>
+          </div>
+          <div *ngIf="song.rejectReason" class="rounded-2xl bg-rose-500/10 p-4 text-rose-300">
+            <p class="text-xs uppercase tracking-[0.24em]">Lý do từ chối</p>
+            <p class="mt-2 text-sm">{{ song.rejectReason }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button *ngIf="song.status === 'Pending' || song.status === 'Rejected'" type="button" (click)="approveSong.emit(song)" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">
+            <i class='bx bx-check-circle text-lg'></i>
+            Duyệt
+          </button>
+          <button *ngIf="song.status === 'Pending'" type="button" (click)="rejectSong.emit(song)" class="inline-flex items-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-500">
+            <i class='bx bx-x-circle text-lg'></i>
+            Từ chối
+          </button>
+          <button *ngIf="song.status === 'Approved'" type="button" (click)="hideSong.emit(song)" class="inline-flex items-center gap-2 rounded-2xl bg-slate-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-600">
+            <i class='bx bx-hide text-lg'></i>
+            Ẩn bài hát
+          </button>
+          <button *ngIf="song.status === 'Hidden'" type="button" (click)="restoreSong.emit(song)" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/30 transition hover:bg-emerald-500/20">
+            <i class='bx bx-show text-lg'></i>
+            Bỏ ẩn
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="drawerType === 'user' && selectedUser as user">
+      <div class="mt-6">
+        <div class="flex flex-col items-center rounded-[2rem] border border-white/10 bg-white/5 px-6 py-8 text-center">
+          <img [src]="user.avatar" [alt]="user.name" class="h-24 w-24 rounded-full object-cover" />
+          <h3 class="mt-4 text-2xl font-semibold text-white">{{ user.name }}</h3>
+          <p class="mt-1 text-sm text-slate-400">{{ user.email }}</p>
+          <div class="mt-4 flex flex-wrap justify-center gap-4">
+            <span class="font-medium" [ngClass]="getUserRoleClass(user.role)">{{ getUserRoleLabel(user.role) }}</span>
+            <span class="font-medium" [ngClass]="getUserStatusClass(user.status)">{{ getUserStatusLabel(user.status) }}</span>
+          </div>
+        </div>
+
+        <div class="mt-5 grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 text-sm text-slate-300">
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Username</span><span>{{ user.username }}</span></div>
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Ngày tạo</span><span>{{ user.createdAt }}</span></div>
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Số playlist</span><span>{{ user.playlistCount }}</span></div>
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Bài hát đã thích</span><span>{{ user.likedSongsCount }}</span></div>
+          <div *ngIf="user.banReason" class="rounded-2xl bg-rose-500/10 p-4 text-rose-300">
+            <p class="text-xs uppercase tracking-[0.24em]">Lý do khóa</p>
+            <p class="mt-2 text-sm">{{ user.banReason }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button *ngIf="user.status === 'Active' && user.role !== 'ADMIN'" type="button" (click)="banUser.emit(user)" class="inline-flex items-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-500">
+            <i class='bx bx-user-x text-lg'></i>
+            Khóa người dùng
+          </button>
+          <button *ngIf="user.status === 'Banned' && user.role !== 'ADMIN'" type="button" (click)="unbanUser.emit(user)" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">
+            <i class='bx bx-user-check text-lg'></i>
+            Mở khóa
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="drawerType === 'artist' && selectedArtistRequest as request">
+      <div class="mt-6">
+        <div class="flex items-center gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-5">
+          <img [src]="request.avatar" [alt]="request.userName" class="h-20 w-20 rounded-full object-cover" />
+          <div>
+            <h3 class="text-xl font-semibold text-white">{{ request.userName }}</h3>
+            <p class="mt-1 text-sm text-slate-400">{{ request.email }}</p>
+            <p class="mt-2 text-sm text-slate-300">Nghệ danh: <span class="font-medium text-white">{{ request.stageName }}</span></p>
+          </div>
+        </div>
+
+        <div class="mt-5 grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 text-sm text-slate-300">
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Thể loại</span><span>{{ request.genre }}</span></div>
+          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Ngày gửi</span><span>{{ request.createdAt }}</span></div>
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-slate-500">Trạng thái</span>
+            <span class="font-medium" [ngClass]="getArtistStatusClass(request.status)">{{ getArtistStatusLabel(request.status) }}</span>
+          </div>
+          <div class="rounded-2xl bg-slate-900/80 p-4">
+            <p class="text-xs uppercase tracking-[0.24em] text-slate-500">Tiểu sử</p>
+            <p class="mt-2 leading-6 text-slate-300">{{ request.bio }}</p>
+          </div>
+          <div *ngIf="request.rejectReason" class="rounded-2xl bg-rose-500/10 p-4 text-rose-300">
+            <p class="text-xs uppercase tracking-[0.24em]">Lý do từ chối</p>
+            <p class="mt-2 text-sm">{{ request.rejectReason }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-3" *ngIf="request.status === 'Pending'">
+          <button type="button" (click)="approveArtist.emit(request)" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">
+            <i class='bx bx-badge-check text-lg'></i>
+            Cấp quyền ARTIST
+          </button>
+          <button type="button" (click)="rejectArtist.emit(request)" class="inline-flex items-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-500">
+            <i class='bx bx-x-circle text-lg'></i>
+            Từ chối yêu cầu
+          </button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

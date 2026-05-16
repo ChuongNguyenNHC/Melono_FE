@@ -1,0 +1,129 @@
+<section class="min-h-[calc(100vh-80px)] bg-[#070b14] text-slate-100">
+  <div class="grid min-h-[calc(100vh-80px)] grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)]">
+    <aside class="border-r border-white/10 bg-slate-950/65 px-4 py-6 sm:px-5 xl:px-4">
+      <div class="space-y-2">
+        <button
+          *ngFor="let item of tabItems"
+          type="button"
+          (click)="setActiveTab(item.key)"
+          class="group flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition"
+          [ngClass]="activeTab === item.key
+            ? 'bg-emerald-500/12 text-white ring-1 ring-inset ring-emerald-500/30'
+            : 'text-slate-400 hover:bg-white/5 hover:text-white'"
+        >
+          <span
+            class="flex h-11 w-11 items-center justify-center rounded-xl text-xl transition"
+            [ngClass]="activeTab === item.key
+              ? 'bg-emerald-500/15 text-emerald-300'
+              : 'bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-white'"
+          >
+            <i [class]="item.icon"></i>
+          </span>
+
+          <span class="flex-1">
+            <span class="block text-sm font-semibold">{{ item.label }}</span>
+          </span>
+
+          <span
+            class="h-8 w-1 rounded-full bg-emerald-400 transition"
+            [ngClass]="activeTab === item.key ? 'opacity-100' : 'opacity-0'"
+          ></span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="px-4 py-6 sm:px-6 xl:px-8">
+      <app-admin-songs
+        *ngIf="activeTab === 'songs'"
+        [songs]="filteredSongs"
+        [search]="songSearch"
+        [statusFilter]="songStatusFilter"
+        [sourceFilter]="songSourceFilter"
+        (searchChange)="songSearch = $event"
+        (statusFilterChange)="songStatusFilter = $event"
+        (sourceFilterChange)="songSourceFilter = $event"
+        (refresh)="refreshSongs()"
+        (openDrawer)="openSongDrawer($event)"
+        (approve)="openApproveSongModal($event)"
+        (reject)="openRejectSongModal($event)"
+        (hide)="openHideSongModal($event)"
+        (restore)="restoreSong($event)"
+      ></app-admin-songs>
+
+      <app-admin-users
+        *ngIf="activeTab === 'users'"
+        [users]="filteredUsers"
+        [search]="userSearch"
+        [roleFilter]="userRoleFilter"
+        [statusFilter]="userStatusFilter"
+        (searchChange)="userSearch = $event"
+        (roleFilterChange)="userRoleFilter = $event"
+        (statusFilterChange)="userStatusFilter = $event"
+        (refresh)="refreshUsers()"
+        (openDrawer)="openUserDrawer($event)"
+        (ban)="openBanUserModal($event)"
+        (unban)="openUnbanUserModal($event)"
+      ></app-admin-users>
+
+      <app-admin-artists
+        *ngIf="activeTab === 'artists'"
+        [requests]="filteredArtistRequests"
+        [search]="artistSearch"
+        [statusFilter]="artistStatusFilter"
+        (searchChange)="artistSearch = $event"
+        (statusFilterChange)="artistStatusFilter = $event"
+        (refresh)="refreshArtists()"
+        (openDrawer)="openArtistDrawer($event)"
+        (approve)="openApproveArtistModal($event)"
+        (reject)="openRejectArtistModal($event)"
+      ></app-admin-artists>
+
+      <app-admin-genres
+        *ngIf="activeTab === 'genres'"
+        [genres]="genres$ | async"
+        (createGenre)="createGenre($event)"
+        (approveGenre)="approveGenre($event)"
+        (deleteGenre)="deleteGenre($event)"
+      ></app-admin-genres>
+    </main>
+  </div>
+
+  <app-admin-drawer
+    [isOpen]="isDrawerOpen"
+    [drawerType]="drawerType"
+    [selectedSong]="selectedSong"
+    [selectedUser]="selectedUser"
+    [selectedArtistRequest]="selectedArtistRequest"
+    (close)="closeDrawer()"
+    (approveSong)="openApproveSongModal($event)"
+    (rejectSong)="openRejectSongModal($event)"
+    (hideSong)="openHideSongModal($event)"
+    (restoreSong)="restoreSong($event)"
+    (banUser)="openBanUserModal($event)"
+    (unbanUser)="openUnbanUserModal($event)"
+    (approveArtist)="openApproveArtistModal($event)"
+    (rejectArtist)="openRejectArtistModal($event)"
+  ></app-admin-drawer>
+
+  <app-admin-modal
+    [isOpen]="isModalOpen"
+    [modalType]="modalType"
+    [selectedSong]="selectedSong"
+    [selectedUser]="selectedUser"
+    [selectedArtistRequest]="selectedArtistRequest"
+    [rejectSongReason]="rejectSongReason"
+    [banReason]="banReason"
+    [rejectArtistReason]="rejectArtistReason"
+    (close)="closeModal()"
+    (rejectSongReasonChange)="rejectSongReason = $event"
+    (banReasonChange)="banReason = $event"
+    (rejectArtistReasonChange)="rejectArtistReason = $event"
+    (confirmApproveSong)="confirmApproveSong()"
+    (confirmRejectSong)="confirmRejectSong()"
+    (confirmHideSong)="confirmHideSong()"
+    (confirmBanUser)="confirmBanUser()"
+    (confirmUnbanUser)="confirmUnbanUser()"
+    (confirmApproveArtist)="confirmApproveArtist()"
+    (confirmRejectArtist)="confirmRejectArtist()"
+  ></app-admin-modal>
+</section>

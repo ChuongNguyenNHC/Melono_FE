@@ -1,11 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Song } from './music.service';
+import { MusicLibraryService } from './music-library.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PlayerService {
+  private readonly musicLibraryService = inject(MusicLibraryService);
+
   private currentSongSubject = new BehaviorSubject<Song | null>(null);
   public currentSong$ = this.currentSongSubject.asObservable();
 
@@ -59,6 +62,9 @@ export class PlayerService {
 
   loadAndPlay(song: Song) {
     this.currentSongSubject.next(song);
+    if (typeof song.id === 'string') {
+      this.musicLibraryService.recordListen(this.musicLibraryService.currentUserId, song.id);
+    }
     this.audio.src = song.previewUrl;
     this.audio.load();
     this.audio.play().catch(e => console.error("Error playing audio", e));

@@ -15,6 +15,7 @@ export class Login {
   isLoginMode = true;
   email = '';
   password = '';
+  errorMessage = '';
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -23,11 +24,14 @@ export class Login {
   }
 
   onLogin() {
-    if (this.email) {
-      this.authService.login(this.email);
-    } else {
-      this.authService.login('guest@melono.com');
+    const user = this.authService.login(this.email, this.password);
+
+    if (!user) {
+      this.errorMessage = 'Sai tên đăng nhập hoặc mật khẩu.';
+      return;
     }
-    this.router.navigate(['/']);
+
+    this.errorMessage = '';
+    this.router.navigate([user.role === 'ADMIN' ? '/admin' : user.role === 'ARTIST' ? '/artist' : '/']);
   }
 }
