@@ -1,0 +1,102 @@
+<section class="space-y-6">
+  <div class="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_80px_rgba(2,6,23,0.35)]">
+    <h1 class="text-3xl font-semibold tracking-tight text-white">Theo dõi nhạc</h1>
+
+    <div class="mt-6 grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
+      <div class="relative">
+        <i class="bx bx-search absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400"></i>
+        <input
+          type="text"
+          [ngModel]="search"
+          (ngModelChange)="searchChange.emit($event)"
+          placeholder="Tìm bài hát đã phát hành..."
+          class="h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 pl-11 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+        />
+      </div>
+
+      <button
+        type="button"
+        (click)="refresh.emit()"
+        class="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white/5 px-5 text-sm font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10"
+      >
+        <i class="bx bx-refresh text-lg"></i>
+        Làm mới
+      </button>
+    </div>
+  </div>
+
+  <div
+    *ngIf="songs.length > 0"
+    class="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/70 shadow-[0_24px_80px_rgba(2,6,23,0.3)]"
+  >
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left text-sm text-slate-300">
+        <thead class="bg-slate-900/95 text-slate-400 backdrop-blur">
+          <tr class="border-b border-white/10">
+            <th class="px-4 py-4 font-medium">Ảnh bìa</th>
+            <th class="px-4 py-4 font-medium">Thông tin bài hát</th>
+            <th class="px-4 py-4 font-medium">Thể loại</th>
+            <th class="px-4 py-4 font-medium">Ngày phát hành</th>
+            <th class="px-4 py-4 font-medium">Lượt nghe</th>
+            <th class="px-4 py-4 font-medium">Lượt thích</th>
+            <th class="px-4 py-4 font-medium text-right">Hành động</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-white/10">
+          <tr *ngFor="let song of songs; trackBy: trackById" class="hover:bg-white/[0.03]">
+            <td class="px-4 py-4">
+              <img [src]="song.thumbnail" [alt]="song.title" class="h-14 w-14 rounded-2xl object-cover" />
+            </td>
+
+            <td class="px-4 py-4">
+              <p class="font-semibold text-white">{{ song.title }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ song.id }} • {{ getSongSourceLabel(song.source) }}</p>
+            </td>
+
+            <td class="px-4 py-4">{{ song.genre }}</td>
+            <td class="px-4 py-4">{{ song.uploadDate }}</td>
+            <td class="px-4 py-4">
+              <span class="inline-flex items-center gap-1 rounded-full bg-sky-400/10 px-3 py-1 text-xs font-semibold text-sky-200 ring-1 ring-inset ring-sky-300/20">
+                <i class="bx bx-headphone text-base"></i>
+                {{ song.listenCount }}
+              </span>
+            </td>
+            <td class="px-4 py-4">
+              <span class="inline-flex items-center gap-1 rounded-full bg-rose-400/10 px-3 py-1 text-xs font-semibold text-rose-200 ring-1 ring-inset ring-rose-300/20">
+                <i class="bx bx-heart text-base"></i>
+                {{ song.likeCount }}
+              </span>
+            </td>
+
+            <td class="px-4 py-4">
+              <div class="flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  (click)="openDrawer.emit(song)"
+                  class="inline-flex items-center gap-2 rounded-full bg-slate-800 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
+                >
+                  <i class="bx bx-show text-base"></i>
+                  Xem chi tiết
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div
+    *ngIf="songs.length === 0"
+    class="rounded-[2rem] border border-dashed border-white/10 bg-slate-950/60 px-6 py-16 text-center"
+  >
+    <div class="mx-auto max-w-md">
+      <i class="bx bx-music block text-6xl text-slate-500"></i>
+      <p class="mt-4 text-lg font-semibold text-white">Chưa có bài hát đã duyệt</p>
+      <p class="mt-2 text-sm leading-6 text-slate-400">
+        Các bài chờ duyệt hoặc bị từ chối nằm trong mục Quản lý nhạc.
+      </p>
+    </div>
+  </div>
+</section>

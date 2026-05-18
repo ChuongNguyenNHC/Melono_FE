@@ -1,50 +1,27 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 
 import { MusicGenre, MusicSong, SongStatus as DomainSongStatus } from '../models/music-domain.models';
 import { MusicLibraryService } from '../services/music-library.service';
-
-type ArtistTab = 'tracking' | 'management';
-type ArtistViewMode = 'list' | 'upload' | 'edit';
-type SongStatus = 'Pending' | 'Approved' | 'Rejected' | 'Hidden';
-type SongSource = 'LOCAL' | 'ITUNES';
-
-type ArtistModalType = 'deleteSong' | null;
-type ArtistDrawerType = 'song' | null;
-
-interface ArtistSongItem {
-  id: string;
-  title: string;
-  genre: string;
-  uploadDate: string;
-  status: SongStatus;
-  note: string;
-  thumbnail: string;
-  source: SongSource;
-  duration: string;
-  description: string;
-  audioUrl?: string;
-  rejectReason?: string;
-  likeCount: number;
-  listenCount: number;
-}
-
-interface SongFormData {
-  title: string;
-  genre: string;
-  stageName: string;
-  description: string;
-  duration: string;
-  audioFileName: string;
-  audioFileUrl: string;
-  thumbnailUrl: string;
-}
+import { ArtistDrawer } from './artist-drawer/artist-drawer';
+import { ArtistManagement } from './artist-management/artist-management';
+import { ArtistModal } from './artist-modal/artist-modal';
+import { ArtistTracking } from './artist-tracking/artist-tracking';
+import {
+  ArtistDrawerType,
+  ArtistModalType,
+  ArtistSongItem,
+  ArtistTab,
+  ArtistViewMode,
+  SongFormData,
+  SongSource,
+  SongStatus,
+} from './artist.models';
 
 @Component({
   selector: 'app-artist',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ArtistTracking, ArtistManagement, ArtistDrawer, ArtistModal],
   templateUrl: './artist.html',
 })
 export class Artist {
@@ -258,6 +235,17 @@ export class Artist {
   refreshManagement(): void {
     this.managementSearch = '';
     this.managementStatusFilter = 'ALL';
+  }
+
+  get editingRejectReason(): string {
+    if (this.selectedSong?.status === 'Rejected') {
+      return this.selectedSong.rejectReason || 'Vui lòng chỉnh sửa lại thông tin bài hát trước khi gửi lại.';
+    }
+
+    const editingSong = this.songs.find(song => song.id === this.editingSongId);
+    if (editingSong?.status !== 'Rejected') return '';
+
+    return editingSong.rejectReason || 'Vui lòng chỉnh sửa lại thông tin bài hát trước khi gửi lại.';
   }
 
   get trackingSongs(): ArtistSongItem[] {

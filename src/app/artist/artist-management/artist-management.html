@@ -1,0 +1,263 @@
+<section class="space-y-6">
+  <ng-container [ngSwitch]="mode">
+    <section *ngSwitchCase="'list'" class="space-y-6">
+      <div class="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_80px_rgba(2,6,23,0.35)]">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div>
+            <h1 class="text-3xl font-semibold tracking-tight text-white">Quản lý nhạc</h1>
+          </div>
+
+          <button
+            type="button"
+            (click)="openUpload.emit()"
+            class="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+          >
+            <i class="bx bx-upload text-lg"></i>
+            Upload bài hát
+          </button>
+        </div>
+
+        <div class="mt-6 grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_220px_auto]">
+          <div class="relative">
+            <i class="bx bx-search absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400"></i>
+            <input
+              type="text"
+              [ngModel]="search"
+              (ngModelChange)="searchChange.emit($event)"
+              placeholder="Tìm theo tên bài hát..."
+              class="h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 pl-11 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+            />
+          </div>
+
+          <select
+            [ngModel]="statusFilter"
+            (ngModelChange)="statusFilterChange.emit($event)"
+            class="h-12 rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="Pending">Chờ duyệt</option>
+            <option value="Approved">Đã duyệt</option>
+            <option value="Rejected">Từ chối</option>
+            <option value="Hidden">Đã ẩn</option>
+          </select>
+
+          <button
+            type="button"
+            (click)="refresh.emit()"
+            class="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white/5 px-5 text-sm font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10"
+          >
+            <i class="bx bx-refresh text-lg"></i>
+            Làm mới
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/70 shadow-[0_24px_80px_rgba(2,6,23,0.3)]">
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-900/95 text-slate-400 backdrop-blur">
+              <tr class="border-b border-white/10">
+                <th class="px-4 py-4 font-medium">Ảnh bìa</th>
+                <th class="px-4 py-4 font-medium">Tên bài hát</th>
+                <th class="px-4 py-4 font-medium">Thể loại</th>
+                <th class="px-4 py-4 font-medium">Ngày tạo</th>
+                <th class="px-4 py-4 font-medium">Trạng thái</th>
+                <th class="px-4 py-4 font-medium text-right">Hành động</th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-white/10">
+              <tr *ngFor="let song of songs; trackBy: trackById" class="hover:bg-white/[0.03]">
+                <td class="px-4 py-4">
+                  <img [src]="song.thumbnail" [alt]="song.title" class="h-14 w-14 rounded-2xl object-cover" />
+                </td>
+
+                <td class="px-4 py-4">
+                  <p class="font-semibold text-white">{{ song.title }}</p>
+                  <p class="mt-1 text-xs text-slate-500">{{ song.id }}</p>
+                </td>
+
+                <td class="px-4 py-4">{{ song.genre }}</td>
+                <td class="px-4 py-4">{{ song.uploadDate }}</td>
+
+                <td class="px-4 py-4 font-medium" [ngClass]="getSongStatusClass(song.status)">
+                  {{ getSongStatusLabel(song.status) }}
+                </td>
+
+                <td class="px-4 py-4">
+                  <div class="flex flex-wrap justify-end gap-2">
+                    <button
+                      type="button"
+                      (click)="openEdit.emit(song)"
+                      class="inline-flex items-center gap-2 rounded-full bg-slate-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-600"
+                    >
+                      <i class="bx bx-edit text-base"></i>
+                      Sửa
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="openDelete.emit(song)"
+                      class="inline-flex items-center gap-2 rounded-full bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-500"
+                    >
+                      <i class="bx bx-trash text-base"></i>
+                      Xóa
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr *ngIf="songs.length === 0">
+                <td colspan="6" class="px-6 py-16 text-center">
+                  <div class="flex flex-col items-center justify-center gap-3 text-slate-500">
+                    <i class="bx bx-music text-5xl"></i>
+                    <p class="text-sm">Không có bài hát phù hợp</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'upload'" class="space-y-6">
+      <ng-container *ngTemplateOutlet="songFormTemplate; context: { title: 'Upload bài hát', submitLabel: 'Tải lên', note: '' }"></ng-container>
+    </section>
+
+    <section *ngSwitchCase="'edit'" class="space-y-6">
+      <ng-container *ngTemplateOutlet="songFormTemplate; context: { title: 'Sửa bài hát', submitLabel: 'Lưu thay đổi', note: rejectedReason }"></ng-container>
+    </section>
+  </ng-container>
+</section>
+
+<ng-template #songFormTemplate let-title="title" let-submitLabel="submitLabel" let-note="note">
+  <div class="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_80px_rgba(2,6,23,0.35)]">
+    <h1 class="text-3xl font-semibold tracking-tight text-white">{{ title }}</h1>
+    <p *ngIf="mode === 'edit'" class="mt-3 text-sm leading-6 text-slate-400">
+      Cập nhật thông tin bài hát của bạn.
+    </p>
+
+    <div *ngIf="note" class="mt-5 rounded-[1.5rem] border border-rose-500/20 bg-rose-500/10 p-4">
+      <p class="font-semibold text-rose-300">Bài hát đã bị từ chối</p>
+      <p class="mt-2 text-sm leading-6 text-rose-200">
+        {{ note }}
+      </p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+    <div class="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6">
+      <div class="space-y-6">
+        <div>
+          <p class="text-sm font-semibold text-white">File bài hát</p>
+          <div class="mt-3 rounded-[1.75rem] border border-dashed border-white/15 bg-slate-900/60 px-6 py-10 text-center">
+            <i class="bx bx-cloud-upload block text-5xl text-slate-500"></i>
+            <p class="mt-4 text-sm text-slate-300">
+              {{ mode === 'edit' ? 'Chọn file mới nếu muốn thay audio hiện tại' : 'Kéo thả file vào đây hoặc bấm để chọn file' }}
+            </p>
+            <p *ngIf="mode === 'upload'" class="mt-2 text-xs text-slate-500">Hỗ trợ mp3, wav</p>
+
+            <label class="mt-5 inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">
+              <i class="bx bx-folder-open text-lg"></i>
+              Chọn file nhạc
+              <input type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/*" class="hidden" (change)="audioFileSelected.emit($event)" />
+            </label>
+
+            <p *ngIf="songForm.audioFileName" class="mt-4 text-sm font-medium text-white">{{ songForm.audioFileName }}</p>
+            <p *ngIf="songForm.duration" class="mt-1 text-xs text-emerald-300">Thời lượng: {{ songForm.duration }}</p>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-sm font-semibold text-white">Ảnh bài hát</p>
+          <div class="mt-3 rounded-[1.75rem] border border-dashed border-white/15 bg-slate-900/60 px-6 py-8 text-center">
+            <i class="bx bx-image-add block text-5xl text-slate-500"></i>
+            <p class="mt-4 text-sm text-slate-300">
+              {{ mode === 'edit' ? 'Chọn ảnh bìa từ máy' : 'Thêm ảnh bìa cho bài hát' }}
+            </p>
+
+            <label class="mt-5 inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-white/10 px-4 text-sm font-semibold text-white ring-1 ring-inset ring-white/10 transition hover:bg-white/15">
+              <i class="bx bx-image-add text-lg"></i>
+              Chọn ảnh bìa
+              <input type="file" accept="image/*" class="hidden" (change)="thumbnailFileSelected.emit($event)" />
+            </label>
+
+            <img
+              *ngIf="songForm.thumbnailUrl"
+              [src]="songForm.thumbnailUrl"
+              alt="Thumbnail preview"
+              class="mx-auto mt-5 h-40 w-40 rounded-2xl object-cover"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6">
+      <div class="grid gap-5">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-white">Tên bài hát</label>
+          <input
+            type="text"
+            [(ngModel)]="songForm.title"
+            class="h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+          />
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-white">Thể loại</label>
+          <select
+            [(ngModel)]="songForm.genre"
+            class="h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+          >
+            <option value="">Chọn thể loại</option>
+            <option *ngFor="let genre of genreOptions" [value]="genre">{{ genre }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-white">Nghệ danh hiển thị</label>
+          <input
+            type="text"
+            [(ngModel)]="songForm.stageName"
+            readonly
+            class="h-12 w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 text-sm text-slate-300 outline-none"
+          />
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-white">Mô tả bài hát của nghệ sĩ</label>
+          <textarea
+            [(ngModel)]="songForm.description"
+            rows="5"
+            class="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+          ></textarea>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3">
+          <p class="text-sm font-semibold text-white">Thời lượng</p>
+          <p class="mt-1 text-sm text-slate-400">{{ songForm.duration || 'Sẽ tự lấy sau khi chọn file nhạc' }}</p>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap justify-end gap-3">
+        <button
+          type="button"
+          (click)="cancelForm.emit()"
+          class="rounded-2xl bg-white/5 px-5 py-3 text-sm font-semibold text-slate-300 ring-1 ring-inset ring-white/10 transition hover:bg-white/10"
+        >
+          Hủy
+        </button>
+
+        <button
+          type="button"
+          (click)="submitForm.emit()"
+          class="rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+        >
+          {{ submitLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>
