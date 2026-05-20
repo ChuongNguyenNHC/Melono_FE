@@ -19,7 +19,7 @@
         shadow-2xl overflow-hidden border border-white/5 
         flex flex-col pt-8 pb-8">
         <!-- Nút quay lại login nằm tĩnh ở góc -->
-        <a href="/login" class="
+        <a routerLink="/login" class="
             absolute top-4 left-4 text-gray-400 hover:text-white 
             transition-colors flex items-center gap-1 text-sm 
             font-medium z-50 rounded-full py-1.5 px-3 hover:bg-white/5">
@@ -29,10 +29,9 @@
         <div class="w-full h-full relative overflow-hidden flex-1 mt-6">
 
             <!-- =================== BƯỚC 1: NHẬP EMAIL VÀ OTP =================== -->
-            <div class="
-            absolute inset-0 w-full h-full px-10 flex flex-col justify-center 
-            transition-transform duration-500 ease-in-out" [class.translate-x-0]="step === 1"
-                [class.-translate-x-full]="step === 2">
+            <div class="absolute inset-0 w-full h-full px-10 flex flex-col justify-center"
+                [class.transition-transform]="isMounted" [class.duration-500]="isMounted" [class.ease-in-out]="isMounted"
+                [class.translate-x-0]="step === 1" [class.-translate-x-full]="step === 2">
 
                 <div class="text-center mb-6">
                     <div class="
@@ -109,10 +108,9 @@
             </div>
 
             <!-- =================== BƯỚC 2: NHẬP MẬT KHẨU MỚI =================== -->
-            <div class="
-                absolute inset-0 w-full h-full px-10 flex flex-col justify-center 
-                transition-transform duration-500 ease-in-out" [class.translate-x-full]="step === 1"
-                [class.translate-x-0]="step === 2">
+            <div class="absolute inset-0 w-full h-full px-10 flex flex-col justify-center"
+                [class.transition-transform]="isMounted" [class.duration-500]="isMounted" [class.ease-in-out]="isMounted"
+                [class.translate-x-full]="step === 1" [class.translate-x-0]="step === 2">
 
                 <div class="text-center mb-6">
                     <div class="

@@ -5,6 +5,7 @@ import { Title } from '@angular/platform-browser';
 import { MusicService, Song } from '../services/music.service';
 import { PlayerService } from '../services/player.service';
 import { MusicLibraryService } from '../services/music-library.service';
+import { PlaylistService, Playlist } from '../services/playlist.service';
 import { Footer } from '../footer/footer';
 import { Subscription } from 'rxjs';
 
@@ -21,6 +22,7 @@ export class SongDetail implements OnInit, OnDestroy {
   private musicService = inject(MusicService);
   playerService = inject(PlayerService);
   libraryService = inject(MusicLibraryService);
+  private playlistService = inject(PlaylistService);
   private cdr = inject(ChangeDetectorRef);
   private titleService = inject(Title);
   
@@ -30,6 +32,13 @@ export class SongDetail implements OnInit, OnDestroy {
   isLoading = true;
   isPlayingSong = false;
   
+  userPlaylists: Playlist[] = [];
+  showPlaylistDropdown = false;
+  showToast = false;
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
+  private clickListener: (() => void) | null = null;
+
   private sub: Subscription | null = null;
   private isPlayingSub: Subscription | null = null;
   private currentSongSub: Subscription | null = null;
@@ -49,12 +58,26 @@ export class SongDetail implements OnInit, OnDestroy {
     this.isPlayingSub = this.playerService.isPlaying$.subscribe(() => {
       this.checkPlayingState();
     });
+
+    this.loadUserPlaylists();
+    this.playlistService.getLikedSongs().subscribe();
+
+    this.clickListener = () => {
+      if (this.showPlaylistDropdown) {
+        this.showPlaylistDropdown = false;
+        this.cdr.detectChanges();
+      }
+    };
+    window.addEventListener('click', this.clickListener);
   }
 
   ngOnDestroy() {
     if (this.sub) this.sub.unsubscribe();
     if (this.currentSongSub) this.currentSongSub.unsubscribe();
     if (this.isPlayingSub) this.isPlayingSub.unsubscribe();
+    if (this.clickListener) {
+      window.removeEventListener('click', this.clickListener);
+    }
   }
 
   loadSongDetails(id: string) {
@@ -131,32 +154,21 @@ export class SongDetail implements OnInit, OnDestroy {
 
   likeSong() {
     if (!this.song) return;
-    let finalId = String(this.song.id);
-    if (finalId.startsWith('itunes-') || !isNaN(Number(finalId))) {
-      finalId = this.libraryService.saveItunesSong({
-        id: finalId.replace('itunes-', ''),
-        title: this.song.title,
-        artist: this.song.artist,
-        coverUrl: this.song.coverUrl,
-        previewUrl: this.song.previewUrl,
-        duration: this.song.duration
-      });
-    }
-    this.libraryService.toggleLikeSong(this.libraryService.currentUserId, finalId);
-    this.cdr.detectChanges();
+    const currentlyLiked = this.isLiked();
+    console.log(`%c[UI - Click] Người dùng bấm nút ${currentlyLiked ? 'Bỏ thích' : 'Thích'} bài hát: "${this.song.title}" (ID: ${this.song.id})`, 'color: #f1c40f; font-weight: bold;');
+    
+    this.playlistService.toggleLikeSong(this.song).subscribe({
+      next: () => {
+        console.log(`%c[UI - Success] Trạng thái "Thích" của bài hát "${this.song?.title}" đã được cập nhật thành công trên UI!`, 'color: #2ecc71; font-weight: bold;');
+        this.cdr.detectChanges();
+      },
+      error: err => console.error('Lỗi khi thích bài hát:', err)
+    });
   }
 
   isLiked(): boolean {
     if (!this.song) return false;
-    const liked = this.libraryService.snapshot.likedSongs || [];
-    const targetIdStr = String(this.song.id);
-    const targetNormalized = targetIdStr.startsWith('itunes-') ? targetIdStr : `itunes-${targetIdStr}`;
-    
-    return liked.some(item => {
-      const itemIdStr = String(item.songId);
-      const itemIdNormalized = itemIdStr.startsWith('itunes-') ? itemIdStr : `itunes-${itemIdStr}`;
-      return itemIdNormalized === targetNormalized || itemIdStr === targetIdStr;
-    });
+    return this.playlistService.isSongLiked(this.song);
   }
 
   playRecommended(song: Song) {
@@ -184,5 +196,56 @@ export class SongDetail implements OnInit, OnDestroy {
     } catch {
       return dateStr;
     }
+  }
+
+  loadUserPlaylists() {
+    this.playlistService.getUserPlaylists().subscribe({
+      next: (playlists) => {
+        this.userPlaylists = playlists;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Không thể tải danh sách phát:', err);
+      }
+    });
+  }
+
+  togglePlaylistDropdown(event: Event) {
+    event.stopPropagation();
+    this.showPlaylistDropdown = !this.showPlaylistDropdown;
+    if (this.showPlaylistDropdown) {
+      this.loadUserPlaylists();
+    }
+    this.cdr.detectChanges();
+  }
+
+  navigateToCreatePlaylist() {
+    this.showPlaylistDropdown = false;
+    this.router.navigate(['/library']);
+  }
+
+  addToPlaylist(playlistId: string | undefined) {
+    if (!this.song || !playlistId) return;
+    this.playlistService.addSongToPlaylist(playlistId, this.song).subscribe({
+      next: () => {
+        this.showPlaylistDropdown = false;
+        this.showToastMessage('Đã thêm bài hát vào danh sách phát thành công!', 'success');
+      },
+      error: (err) => {
+        console.error(err);
+        this.showToastMessage('Lỗi khi thêm bài hát vào danh sách phát.', 'error');
+      }
+    });
+  }
+
+  private showToastMessage(message: string, type: 'success' | 'error') {
+    this.toastMessage = message;
+    this.toastType = type;
+    this.showToast = true;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.showToast = false;
+      this.cdr.detectChanges();
+    }, 3000);
   }
 }

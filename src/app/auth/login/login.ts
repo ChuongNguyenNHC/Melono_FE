@@ -1,6 +1,6 @@
-import { Component, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, NgZone, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
@@ -8,11 +8,12 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login {
+export class Login implements OnInit {
+  isMounted = false;
   isLoginMode = true;
   email = '';
   password = '';
@@ -33,6 +34,13 @@ export class Login {
     private zone: NgZone,
     private cdr: ChangeDetectorRef
   ) {}
+
+  ngOnInit() {
+    setTimeout(() => {
+      this.isMounted = true;
+      this.cdr.detectChanges();
+    }, 100);
+  }
 
   toggleMode() {
     this.isLoginMode = !this.isLoginMode;

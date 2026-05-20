@@ -6,6 +6,7 @@ import { MusicSong } from '../models/music-domain.models';
 import { MusicLibraryService } from '../services/music-library.service';
 import { MusicService, Song } from '../services/music.service';
 import { PlayerService } from '../services/player.service';
+import { PlaylistService } from '../services/playlist.service';
 
 @Component({
   selector: 'app-genre',
@@ -18,6 +19,7 @@ export class Genre implements OnInit {
   readonly libraryService = inject(MusicLibraryService);
   private readonly playerService = inject(PlayerService);
   private readonly musicService = inject(MusicService);
+  private readonly playlistService = inject(PlaylistService);
   readonly genres$ = this.libraryService.genres$;
 
   chartSongs: Song[] = this.fallbackChartSongs;
@@ -111,7 +113,16 @@ export class Genre implements OnInit {
   }
 
   toggleLike(song: MusicSong): void {
-    this.libraryService.toggleLikeSong(this.libraryService.currentUserId, song.id);
+    const targetSong: Song = {
+      id: song.id,
+      title: song.title,
+      artist: song.artistName,
+      coverUrl: song.thumbnailUrl,
+      previewUrl: song.fileUrl || song.previewUrl || '',
+      duration: song.duration,
+      plays: '0'
+    };
+    this.playlistService.toggleLikeSong(targetSong).subscribe();
   }
 
   playItunesSong(song: Song): void {
@@ -123,12 +134,7 @@ export class Genre implements OnInit {
   }
 
   likeItunesSong(song: Song, genreId: string): void {
-    const savedSongId = this.libraryService.saveItunesSong({
-      ...song,
-      genreId,
-    });
-
-    this.libraryService.toggleLikeSong(this.libraryService.currentUserId, savedSongId);
+    this.playlistService.toggleLikeSong(song).subscribe();
   }
 
   toggleSection(section: 'pop' | 'rap' | 'acoustic'): void {

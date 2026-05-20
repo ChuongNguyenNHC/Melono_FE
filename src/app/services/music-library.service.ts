@@ -603,7 +603,7 @@ function createSeedState(): MusicLibraryState {
       ownerUserId: 'u002',
       thumbnailUrl:
         'https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=300&auto=format&fit=crop',
-      duration: '03:28',
+      duration: '0:30',
       status: 'APPROVED',
       createdAt: '2026-04-09T18:10:00.000Z',
       description: 'Ca khúc pop tươi sáng với phần phối khí trẻ trung và giai điệu dễ nghe.',

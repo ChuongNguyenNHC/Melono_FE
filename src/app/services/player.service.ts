@@ -29,8 +29,15 @@ export class PlayerService {
   private repeatSubject = new BehaviorSubject<'none' | 'all' | 'one'>('none');
   public repeatMode$ = this.repeatSubject.asObservable();
 
+  private isPlayingFromPlaylistSubject = new BehaviorSubject<boolean>(false);
+  public isPlayingFromPlaylist$ = this.isPlayingFromPlaylistSubject.asObservable();
+
+  get isPlayingFromPlaylist(): boolean {
+    return this.isPlayingFromPlaylistSubject.value;
+  }
+
   public audio = new Audio();
-  private queue: Song[] = [];
+  public queue: Song[] = [];
   private currentIndex: number = -1;
 
   constructor() {
@@ -45,16 +52,22 @@ export class PlayerService {
     });
   }
 
-  playSong(song: Song, context?: Song[]) {
+  playSong(song: Song, context?: Song[], isFromPlaylist: boolean = false) {
     if (!song.previewUrl) {
       alert('Bài hát này không có bản nghe thử trên iTunes.');
       return;
     }
 
-    if (context) {
+    this.isPlayingFromPlaylistSubject.next(isFromPlaylist);
+
+    if (context && context.length > 0) {
       this.queue = context;
       this.currentIndex = this.queue.findIndex(s => s.id === song.id);
-    } else if (this.queue.length === 0) {
+      if (this.currentIndex === -1) {
+        this.queue = [song, ...context];
+        this.currentIndex = 0;
+      }
+    } else {
       this.queue = [song];
       this.currentIndex = 0;
     }
@@ -142,8 +155,15 @@ export class PlayerService {
   }
 
   toggleRepeat() {
-    // Chỉ cho phép chế độ lặp lại bài hát hiện tại ('one') hoặc không lặp lại ('none')
-    const nextMode = this.repeatSubject.value === 'none' ? 'one' : 'none';
+    const currentMode = this.repeatSubject.value;
+    let nextMode: 'none' | 'all' | 'one' = 'none';
+    if (currentMode === 'none') {
+      nextMode = 'all';
+    } else if (currentMode === 'all') {
+      nextMode = 'one';
+    } else {
+      nextMode = 'none';
+    }
     this.repeatSubject.next(nextMode);
   }
 

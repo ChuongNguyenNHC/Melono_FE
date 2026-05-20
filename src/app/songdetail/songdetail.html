@@ -67,6 +67,43 @@
           <i [class]="isLiked() ? 'bx bxs-heart text-2xl text-red-500 animate-pulse-once' : 'bx bx-heart text-2xl text-gray-400 hover:text-white'"></i>
         </button>
 
+        <!-- Save to Playlist Button & Dropdown -->
+        <div class="relative" (click)="$event.stopPropagation()">
+          <button (click)="togglePlaylistDropdown($event)" [title]="'Lưu vào danh sách phát'" 
+                  class="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/30 text-white transition-all duration-300">
+            <i class="bx bx-list-plus text-2xl text-gray-400 hover:text-[#1ed760]"></i>
+          </button>
+
+          <!-- Dropdown/Popup Overlay -->
+          <div *ngIf="showPlaylistDropdown" 
+               class="absolute left-0 mt-2 w-64 z-50 rounded-xl border border-white/10 bg-[#18181b]/95 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl animate-fade-in">
+            <div class="px-3 py-2 text-xs font-bold uppercase tracking-wider text-gray-400 border-b border-white/5 mb-1 flex justify-between items-center">
+              <span>Lưu vào danh sách phát</span>
+              <button (click)="showPlaylistDropdown = false" class="hover:text-white">
+                <i class="bx bx-x text-base"></i>
+              </button>
+            </div>
+            
+            <div class="max-h-48 overflow-y-auto scrollbar-thin">
+              <!-- Loading user playlists -->
+              <div *ngIf="userPlaylists.length === 0" class="px-3 py-4 text-center text-xs text-gray-500">
+                Chưa có danh sách phát nào.
+                <button (click)="navigateToCreatePlaylist()" class="block mx-auto mt-2 text-[#1ed760] hover:underline font-semibold">Tạo mới ngay</button>
+              </div>
+
+              <!-- Loop playlists -->
+              <button *ngFor="let pl of userPlaylists" 
+                      (click)="addToPlaylist(pl.playlistId)"
+                      class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-white/10 group">
+                <div class="flex h-8 w-8 items-center justify-center rounded bg-zinc-800 text-gray-300">
+                  <i class="bx bx-music text-lg"></i>
+                </div>
+                <span class="truncate font-medium text-white/90 group-hover:text-[#1ed760]">{{ pl.name }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div *ngIf="song.previewUrl" class="text-sm font-semibold text-gray-400 flex items-center gap-2">
           <i class='bx bx-check-circle text-[#1ed760] text-lg'></i>
           Sẵn sàng bản nghe thử
@@ -199,5 +236,13 @@
 
     </div>
 
+  </div>
+
+  <!-- Premium Glassmorphic Toast Notification -->
+  <div *ngIf="showToast" 
+       [class]="'fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl border px-4 py-3 shadow-2xl backdrop-blur-xl transition-all duration-500 transform translate-y-0 opacity-100 ' + 
+                (toastType === 'success' ? 'border-emerald-500/20 bg-emerald-950/80 text-emerald-300' : 'border-rose-500/20 bg-rose-950/80 text-rose-300')">
+    <i [class]="toastType === 'success' ? 'bx bx-check-circle text-xl' : 'bx bx-error-circle text-xl'"></i>
+    <span class="text-sm font-medium">{{ toastMessage }}</span>
   </div>
 </div>

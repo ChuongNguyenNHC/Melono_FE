@@ -14,6 +14,7 @@ export interface Song {
   genre?: string;
   releaseDate?: string;
   copyright?: string;
+  itunesId?: string;
 }
 
 export interface ItunesPlaylist {
@@ -53,6 +54,32 @@ export class MusicService {
       }
     }
     
+    // Nếu là UUID của bài hát trong Database Backend
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(idStr)) {
+      return this.http.get<any>(`http://localhost:8080/api/songs/${idStr}`).pipe(
+        map(song => {
+          if (song) {
+            const isItunes = song.source === 'ITUNES' || song.itunesId != null;
+            return {
+              id: song.songId,
+              title: song.title,
+              artist: song.artistName,
+              coverUrl: song.thumbnailUrl || '',
+              previewUrl: song.previewUrl || song.fileUrl || '',
+              duration: isItunes ? '0:30' : this.formatDuration(song.duration * 1000),
+              plays: 'DB',
+              genre: 'Local',
+              releaseDate: song.createdAt,
+              itunesId: song.itunesId
+            };
+          }
+          return null;
+        }),
+        catchError(() => of(null))
+      );
+    }
+    
     // Nếu là nhạc iTunes
     const cleanId = idStr.replace('itunes-', '');
     return this.http.get<any>(`https://itunes.apple.com/lookup?id=${cleanId}`).pipe(
@@ -65,7 +92,7 @@ export class MusicService {
             artist: item.artistName,
             coverUrl: item.artworkUrl100 ? item.artworkUrl100.replace('100x100', '500x500') : '',
             previewUrl: item.previewUrl,
-            duration: this.formatDuration(item.trackTimeMillis),
+            duration: '0:30',
             plays: Math.floor(Math.random() * 900 + 100) + 'M',
             genre: item.primaryGenreName,
             releaseDate: item.releaseDate,
@@ -104,7 +131,7 @@ export class MusicService {
         artist: item.artistName,
         coverUrl: item.artworkUrl100 ? item.artworkUrl100.replace('100x100', '300x300') : '',
         previewUrl: item.previewUrl,
-        duration: this.formatDuration(item.trackTimeMillis),
+        duration: '0:30',
         plays: Math.floor(Math.random() * 900 + 100) + 'M',
       })))
     );
@@ -120,7 +147,7 @@ export class MusicService {
           artist: item['im:artist'].label,
           coverUrl: item['im:image'] && item['im:image'].length > 0 ? item['im:image'][item['im:image'].length - 1].label.replace(/170x170|60x60|55x55/, '300x300') : '',
           previewUrl: item.link && item.link.length > 1 && item.link[1].attributes ? item.link[1].attributes.href : '',
-          duration: '3:30', // Fake duration since RSS lacks trackTimeMillis 
+          duration: '0:30', // All iTunes songs show 0:30 due to preview constraint
           plays: Math.floor(Math.random() * 90) + 10 + 'M' // Fake plays
         }));
       })

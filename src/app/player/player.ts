@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { PlayerService } from '../services/player.service';
 import { MusicLibraryService } from '../services/music-library.service';
+import { PlaylistService } from '../services/playlist.service';
 
 @Component({
   selector: 'app-player',
@@ -15,6 +16,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   @Input() isExpanded = true;
   playerService = inject(PlayerService);
   musicLibraryService = inject(MusicLibraryService);
+  playlistService = inject(PlaylistService);
   cdr = inject(ChangeDetectorRef);
   
   volume = 1;
@@ -24,19 +26,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   duration = 0;
 
   isShuffleDisabled(song: any): boolean {
-    if (!song || !song.id) return true;
-    
-    const activeIdStr = String(song.id);
-    const activeIdNormalized = activeIdStr.startsWith('itunes-') ? activeIdStr : `itunes-${activeIdStr}`;
-    
-    // Kiểm tra xem ID bài hát này có nằm trong bảng mối quan hệ playlistSongs hay không
-    const playlistSongs = this.musicLibraryService.snapshot.playlistSongs || [];
-    return !playlistSongs.some(item => {
-      if (!item.songId) return false;
-      const itemIdStr = String(item.songId);
-      const itemIdNormalized = itemIdStr.startsWith('itunes-') ? itemIdStr : `itunes-${itemIdStr}`;
-      return itemIdNormalized === activeIdNormalized || itemIdStr === activeIdStr;
-    });
+    return !song || !song.id || !this.playerService.isPlayingFromPlaylist || this.playerService.queue.length <= 1;
   }
   
   private timeUpdateHandler = () => {
@@ -126,5 +116,20 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.volume = this.previousVolume > 0 ? this.previousVolume : 1;
     }
     this.playerService.setVolume(this.volume);
+  }
+
+  toggleLike(song: any) {
+    const currentlyLiked = this.isSongLiked(song);
+    console.log(`%c[UI - Player Bar] Người dùng bấm nút ${currentlyLiked ? 'Bỏ thích' : 'Thích'} bài hát: "${song.title}" từ Thanh phát nhạc`, 'color: #f1c40f; font-weight: bold;');
+    this.playlistService.toggleLikeSong(song).subscribe({
+      next: () => {
+        console.log(`%c[UI - Player Bar] Đã cập nhật trạng thái "Thích" thành công trên Thanh phát nhạc cho bài hát: "${song.title}"!`, 'color: #2ecc71; font-weight: bold;');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  isSongLiked(song: any): boolean {
+    return this.playlistService.isSongLiked(song);
   }
 }

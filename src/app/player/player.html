@@ -34,7 +34,9 @@
           }}</span>
       </div>
       <div class="flex items-center pl-1 pr-1">
-        <i class='bx bx-heart text-xl text-gray-400 hover:text-white cursor-pointer transition-colors'></i>
+        <button type="button" (click)="toggleLike(song)" class="flex items-center justify-center transition-transform hover:scale-110" [ngClass]="isSongLiked(song) ? 'text-[#1ed760]' : 'text-gray-400 hover:text-white'" [title]="isSongLiked(song) ? 'Bỏ thích' : 'Thích bài hát'">
+          <i class="bx text-xl" [ngClass]="isSongLiked(song) ? 'bxs-heart text-[#1ed760]' : 'bx-heart'"></i>
+        </button>
       </div>
     </div>
 
