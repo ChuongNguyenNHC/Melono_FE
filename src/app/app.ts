@@ -12,9 +12,15 @@ import { Playlistsbar } from './playlistsbar/playlistsbar';
   styleUrl: './app.css',
 })
 export class App implements OnInit {
+  private static isInitialPathMinimal(): boolean {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname;
+    return path === '/login' || path === '/forget' || path === '/admin' || path === '/artist';
+  }
+
   protected readonly title = signal('frontend');
-  protected readonly showPlaylistBar = signal(true);
-  protected readonly showHeader = signal(true);
+  protected readonly showPlaylistBar = signal(!App.isInitialPathMinimal());
+  protected readonly showHeader = signal(!App.isInitialPathMinimal());
 
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);

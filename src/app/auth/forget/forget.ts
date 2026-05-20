@@ -1,6 +1,6 @@
-import { Component, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, NgZone, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
@@ -8,11 +8,12 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-forget',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './forget.html',
   styleUrl: './forget.css',
 })
-export class Forget {
+export class Forget implements OnInit {
+  isMounted = false;
   step: number = 1;
 
   // Form fields
@@ -33,6 +34,13 @@ export class Forget {
     private zone: NgZone,
     private cdr: ChangeDetectorRef
   ) {}
+
+  ngOnInit() {
+    setTimeout(() => {
+      this.isMounted = true;
+      this.cdr.detectChanges();
+    }, 100);
+  }
 
   sendOtp() {
     if (!this.email || !this.email.trim()) {
@@ -63,7 +71,7 @@ export class Forget {
 
         Swal.fire({
           title: 'Đã gửi mã OTP!',
-          text: 'Mã OTP 6 số đã được gửi tới email của bạn. Vui lòng kiểm tra hộp thư (hoặc log terminal backend)!',
+          text: 'Mã OTP 6 số đã được gửi tới email của bạn. Vui lòng kiểm tra hộp thư!',
           icon: 'success',
           confirmButtonText: 'Đồng ý',
           confirmButtonColor: '#1ed760',

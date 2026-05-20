@@ -17,12 +17,14 @@
         bg-[#1c1c28]/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/5">
 
         <!-- Form Container -->
-        <div class="absolute top-0 left-0 w-1/2 h-full 
-            transition-transform duration-700 ease-in-out z-20" [class.translate-x-full]="!isLoginMode">
+        <div class="absolute top-0 left-0 w-1/2 h-full z-20"
+            [class.transition-transform]="isMounted" [class.duration-700]="isMounted" [class.ease-in-out]="isMounted"
+            [class.translate-x-full]="!isLoginMode">
 
             <!-- Form đăng nhập -->
-            <div class="absolute inset-0 flex flex-col justify-center items-center px-12 
-                transition-all duration-700 ease-in-out" [class.opacity-100]="isLoginMode" [class.z-20]="isLoginMode"
+            <div class="absolute inset-0 flex flex-col justify-center items-center px-12"
+                [class.transition-all]="isMounted" [class.duration-700]="isMounted" [class.ease-in-out]="isMounted"
+                [class.opacity-100]="isLoginMode" [class.z-20]="isLoginMode"
                 [class.opacity-0]="!isLoginMode" [class.z-10]="!isLoginMode" [class.pointer-events-none]="!isLoginMode">
 
                 <div class="w-full mb-8 text-center">
@@ -64,7 +66,7 @@
                                 bg-[#252533] border-gray-600 focus:ring-[#1ed760]
                             "> Nhớ mật khẩu
                         </label>
-                        <a href="/forget" class="text-sm text-[#1ed760] hover:text-[#1bc055] transition-colors">Quên mật
+                        <a routerLink="/forget" class="text-sm text-[#1ed760] hover:text-[#1bc055] transition-colors">Quên mật
                             khẩu?</a>
                     </div>
                     <p *ngIf="errorMessage" class="rounded-xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
@@ -90,9 +92,9 @@
             </div>
 
             <!-- Form đăng ký -->
-            <div class="
-                absolute inset-0 flex flex-col justify-center items-center px-12 
-                transition-all duration-700 ease-in-out" [class.opacity-0]="isLoginMode" [class.z-10]="isLoginMode"
+            <div class="absolute inset-0 flex flex-col justify-center items-center px-12"
+                [class.transition-all]="isMounted" [class.duration-700]="isMounted" [class.ease-in-out]="isMounted"
+                [class.opacity-0]="isLoginMode" [class.z-10]="isLoginMode"
                 [class.pointer-events-none]="isLoginMode" [class.opacity-100]="!isLoginMode"
                 [class.z-20]="!isLoginMode">
 
@@ -168,11 +170,9 @@
         </div>
 
         <!-- Overlay Container (Overlay trượt trái phải) -->
-        <div class="
-            absolute top-0 left-1/2 w-1/2 h-full z-30 
-            transition-transform duration-700 ease-in-out 
-            shadow-[-10px_0_30px_rgba(0,0,0,0.5)]
-            " [class.-translate-x-full]="!isLoginMode">
+        <div class="absolute top-0 left-1/2 w-1/2 h-full z-30 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]"
+            [class.transition-transform]="isMounted" [class.duration-700]="isMounted" [class.ease-in-out]="isMounted"
+            [class.-translate-x-full]="!isLoginMode">
             <div class="
                 w-full h-full text-white flex flex-col items-center justify-center 
                 relative overflow-hidden bg-cover bg-center
@@ -185,7 +185,8 @@
                 </div>
 
                 <!-- Logic đổi form -->
-                <div class="z-10 text-center px-10 absolute transition-all duration-700 w-full"
+                <div class="z-10 text-center px-10 absolute w-full"
+                    [class.transition-all]="isMounted" [class.duration-700]="isMounted"
                     [class.opacity-100]="isLoginMode" [class.translate-x-0]="isLoginMode"
                     [class.opacity-0]="!isLoginMode" [class.translate-x-12]="!isLoginMode"
                     [class.pointer-events-none]="!isLoginMode">
@@ -208,9 +209,9 @@
                     </button>
                 </div>
 
-                <div class="
-                    z-10 text-center px-10 absolute transition-all duration-700 w-full" [class.opacity-0]="isLoginMode"
-                    [class.-translate-x-12]="isLoginMode" [class.pointer-events-none]="isLoginMode"
+                <div class="z-10 text-center px-10 absolute w-full"
+                    [class.transition-all]="isMounted" [class.duration-700]="isMounted"
+                    [class.opacity-0]="isLoginMode" [class.-translate-x-12]="isLoginMode" [class.pointer-events-none]="isLoginMode"
                     [class.opacity-100]="!isLoginMode" [class.translate-x-0]="!isLoginMode">
                     <div class="
                         inline-flex p-4 items-center justify-center bg-white/5 
