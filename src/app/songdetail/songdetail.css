@@ -1,0 +1,88 @@
+/* Vinyl Grooves texture background simulating real vinyl records */
+.vinyl-grooves {
+  background: radial-gradient(
+    circle,
+    #18181b 20%,
+    #09090b 21%,
+    #1f1f23 30%,
+    #09090b 31%,
+    #1f1f23 40%,
+    #09090b 41%,
+    #1c1c20 50%,
+    #09090b 51%,
+    #18181b 60%,
+    #09090b 61%,
+    #1c1c20 70%,
+    #09090b 71%,
+    #141416 80%,
+    #09090b 81%,
+    #111113 100%
+  );
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 20px rgba(255, 255, 255, 0.05);
+  animation: spin-vinyl 15s linear infinite;
+  animation-play-state: paused;
+}
+
+/* Run the spinning animation when song is active */
+.vinyl-grooves.spinning {
+  animation-play-state: running;
+}
+
+@keyframes spin-vinyl {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Needle Arm realistic swing transitions */
+.tonearm {
+  transform: rotate(0deg);
+  transform-origin: 90px 10px;
+  transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.tonearm-playing {
+  transform: rotate(18deg);
+}
+
+/* Pulse visualizer bar transitions */
+.bar {
+  transition: height 0.3s ease;
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+}
+
+.bar-playing {
+  animation: pulse-visualizer 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-visualizer {
+  0% {
+    transform: scaleY(0.25);
+  }
+  100% {
+    transform: scaleY(1.2);
+  }
+}
+
+/* Custom animation for liked heart click */
+@keyframes heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-pulse-once {
+  animation: heart-pop 0.4s ease-out;
+}

@@ -1,0 +1,203 @@
+<div class="relative h-full flex-1 overflow-y-auto overflow-x-hidden bg-[#121212] font-sans text-white scrollbar-hide">
+  <!-- Back Button & Glass Header -->
+  <div class="absolute left-8 top-6 z-30 flex gap-4">
+    <button type="button" (click)="goBack()" class="flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/70 hover:scale-105">
+      <i class='bx bx-chevron-left text-3xl'></i>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex h-full w-full flex-col items-center justify-center py-40">
+    <div class="h-12 w-12 rounded-full border-4 border-t-transparent border-[#1ed760] animate-spin mb-4"></div>
+    <p class="text-gray-400 text-sm font-medium">Đang tải thông tin bài hát...</p>
+  </div>
+
+  <div *ngIf="!isLoading && song" class="relative">
+    
+    <!-- Top Hero Banner with Blurred Background -->
+    <div class="relative flex min-h-[380px] items-end gap-8 px-8 pb-9 pt-24 bg-linear-to-b from-[#252528] to-[#121212]">
+      
+      <!-- Blurred Wallpaper -->
+      <div class="absolute inset-0 z-0 overflow-hidden">
+        <img [src]="song.coverUrl" [alt]="song.title" class="h-full w-full scale-125 object-cover opacity-25 blur-3xl" />
+        <div class="absolute inset-0 bg-black/40"></div>
+      </div>
+
+      <!-- Crisp Cover Art -->
+      <div class="relative z-10 h-[240px] w-[240px] shrink-0 overflow-hidden rounded-lg shadow-[0_12px_50px_rgba(0,0,0,0.7)] group">
+        <img [src]="song.coverUrl" [alt]="song.title" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <button (click)="togglePlay()" class="h-16 w-16 rounded-full bg-[#1ed760] text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform duration-300 shadow-xl">
+            <i [class]="isPlayingSong ? 'bx bx-pause text-4xl' : 'bx bx-play text-4xl ml-1'"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Info Details -->
+      <div class="relative z-10 min-w-0 pb-2">
+        <span class="text-xs font-bold uppercase tracking-[0.2em] text-[#1ed760]">Bài hát</span>
+        <h1 class="mt-2 line-clamp-2 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl lg:text-6xl text-white drop-shadow-md">
+          {{ song.title }}
+        </h1>
+        
+        <p class="mt-4 flex flex-wrap items-center gap-3 text-sm text-white/90">
+          <span class="font-bold hover:underline cursor-pointer text-white">{{ song.artist }}</span>
+          <span class="text-white/40">•</span>
+          <span class="px-2 py-0.5 bg-white/10 rounded text-xs text-gray-300 uppercase tracking-wider font-semibold">{{ song.genre || 'Pop' }}</span>
+          <span class="text-white/40">•</span>
+          <span class="text-white/80 font-medium">Lượt nghe: {{ song.plays }}</span>
+          <span *ngIf="song.releaseDate" class="text-white/40">•</span>
+          <span *ngIf="song.releaseDate" class="text-gray-300">{{ formatDate(song.releaseDate) }}</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="relative z-10 bg-gradient-to-b from-black/20 via-[#121212] to-[#121212] px-8 pb-24 pt-6">
+      
+      <!-- Premium Toolbar Controls -->
+      <div class="flex items-center gap-6 pb-8 border-b border-white/5">
+        <button (click)="togglePlay()" [title]="isPlayingSong ? 'Tạm dừng' : 'Phát bài hát'" 
+                class="flex h-16 w-16 items-center justify-center rounded-full bg-[#1ed760] text-black shadow-2xl transition-all duration-300 hover:scale-105 hover:bg-[#1fdf64]">
+          <i [class]="isPlayingSong ? 'bx bx-pause text-5xl' : 'bx bx-play text-5xl ml-1'"></i>
+        </button>
+
+        <button (click)="likeSong()" [title]="isLiked() ? 'Bỏ thích' : 'Yêu thích'" 
+                class="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/30 text-white transition-all duration-300">
+          <i [class]="isLiked() ? 'bx bxs-heart text-2xl text-red-500 animate-pulse-once' : 'bx bx-heart text-2xl text-gray-400 hover:text-white'"></i>
+        </button>
+
+        <div *ngIf="song.previewUrl" class="text-sm font-semibold text-gray-400 flex items-center gap-2">
+          <i class='bx bx-check-circle text-[#1ed760] text-lg'></i>
+          Sẵn sàng bản nghe thử
+        </div>
+      </div>
+
+      <!-- Two-Column Interactive Layout -->
+      <div class="grid gap-12 lg:grid-cols-[1.2fr_1.8fr] pt-8">
+        
+        <!-- Left Column: Spinning Vinyl Record Player & Visualizer -->
+        <div class="flex flex-col items-center justify-start rounded-2xl border border-white/5 bg-[#181818]/45 p-8 shadow-xl relative overflow-hidden backdrop-blur-md">
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-[#1ed760] mb-8 truncate max-w-[280px] text-center" [title]="song.title">{{ song.title }}</p>
+          
+          <!-- Animated Spinning Vinyl Cover -->
+          <div class="relative flex items-center justify-center w-[260px] h-[260px] md:w-[300px] md:h-[300px]">
+            <!-- Record Outer Ring -->
+            <div class="absolute inset-0 rounded-full bg-black shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-white/5 flex items-center justify-center vinyl-grooves"
+                 [class.spinning]="isPlayingSong">
+              
+              <!-- Center Label (Cover Image) -->
+              <div class="relative w-[100px] h-[100px] md:w-[120px] md:h-[120px] rounded-full overflow-hidden border-4 border-black/80 flex items-center justify-center">
+                <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover" />
+                <!-- Vinyl Spindle Hole -->
+                <div class="absolute w-4 h-4 bg-[#121212] rounded-full border border-white/20 shadow-inner z-20"></div>
+              </div>
+            </div>
+            
+            <!-- Floating Tonearm needle indicator -->
+            <div class="absolute top-[-20px] right-[10px] w-24 h-32 origin-top-right transition-transform duration-700 pointer-events-none z-30 tonearm"
+                 [class.tonearm-playing]="isPlayingSong">
+              <svg width="100%" height="100%" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M90 10 L80 15 L20 70 L30 80 L35 95" stroke="#71717a" stroke-width="5" stroke-linecap="round"/>
+                <circle cx="90" cy="10" r="10" fill="#a1a1aa"/>
+                <rect x="25" y="90" width="12" height="18" rx="2" fill="#ef4444" transform="rotate(45 25 90)"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Pulsing Audio Visualizer indicator -->
+          <div class="mt-8 flex items-center justify-center gap-[4px] h-8 w-40">
+            <div class="bar bg-[#1ed760] w-1" [class.bar-playing]="isPlayingSong" style="animation-delay: 0.1s; height: 10%;"></div>
+            <div class="bar bg-[#1ed760] w-1" [class.bar-playing]="isPlayingSong" style="animation-delay: 0.3s; height: 30%;"></div>
+            <div class="bar bg-[#1ed760] w-1" [class.bar-playing]="isPlayingSong" style="animation-delay: 0.5s; height: 90%;"></div>
+            <div class="bar bg-[#1ed760] w-1" [class.bar-playing]="isPlayingSong" style="animation-delay: 0.2s; height: 50%;"></div>
+            <div class="bar bg-[#1ed760] w-1" [class.bar-playing]="isPlayingSong" style="animation-delay: 0.7s; height: 75%;"></div>
+            <div class="bar bg-[#1ed760] w-1" [class.bar-playing]="isPlayingSong" style="animation-delay: 0.4s; height: 20%;"></div>
+            <div class="bar bg-[#1ed760] w-1" [class.bar-playing]="isPlayingSong" style="animation-delay: 0.6s; height: 60%;"></div>
+          </div>
+          
+          <p class="text-xs text-gray-500 mt-2 font-medium tracking-wide">
+            {{ isPlayingSong ? 'Đang phát...' : 'Đã tạm dừng' }}
+          </p>
+        </div>
+
+        <!-- Right Column: dynamic lookup and details -->
+        <div class="flex flex-col gap-8">
+          
+          <!-- Song Credits/Specs Card -->
+          <div class="rounded-2xl border border-white/5 bg-[#181818]/45 p-6 shadow-xl backdrop-blur-md">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <i class='bx bx-info-square text-[#1ed760]'></i>
+              Thông tin bản quyền & Kỹ thuật
+            </h3>
+            
+            <div class="grid gap-3 text-sm text-gray-300">
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <span class="text-gray-400">Đơn vị xuất bản (Copyright)</span>
+                <span class="font-medium text-white text-right max-w-[70%] truncate" [title]="song.copyright || 'Chưa cập nhật'">
+                  {{ song.copyright || 'Copyright iTunes Store & Melono' }}
+                </span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <span class="text-gray-400">Thể loại chính</span>
+                <span class="font-medium text-white">{{ song.genre || 'Local Pop' }}</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <span class="text-gray-400">Thời lượng file nghe thử</span>
+                <span class="font-medium text-white">{{ song.duration }}</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <span class="text-gray-400">Nguồn dữ liệu</span>
+                <span class="font-medium text-[#1ed760] flex items-center gap-1">
+                  <i class='bx bxl-apple text-base'></i> iTunes Store API
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Recommendations: More from the artist -->
+          <div class="rounded-2xl border border-white/5 bg-[#181818]/45 p-6 shadow-xl backdrop-blur-md flex-1">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <i class='bx bx-music text-[#1ed760]'></i>
+              Khám phá thêm từ {{ song.artist }}
+            </h3>
+
+            <!-- Placeholder if empty -->
+            <div *ngIf="artistSongs.length === 0" class="text-center py-8 text-sm text-gray-500">
+              Không tìm thấy bài hát gợi ý khác.
+            </div>
+
+            <!-- List of dynamic tracks -->
+            <div class="flex flex-col gap-1" *ngIf="artistSongs.length > 0">
+              <button *ngFor="let rel of artistSongs; let idx = index" 
+                      (click)="playRecommended(rel)"
+                      class="group flex items-center justify-between rounded-lg p-2.5 transition hover:bg-white/5 text-left w-full">
+                <div class="flex items-center gap-3 min-w-0 flex-1 pr-4">
+                  <span class="w-4 text-center text-xs text-gray-500 group-hover:text-white">{{ idx + 1 }}</span>
+                  <img [src]="rel.coverUrl" [alt]="rel.title" class="h-10 w-10 shrink-0 rounded object-cover shadow" />
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-semibold transition group-hover:text-[#1ed760]">{{ rel.title }}</p>
+                    <p class="truncate text-xs text-gray-400 mt-0.5">{{ rel.artist }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+                  <i class='bx bx-play-circle text-xl text-[#1ed760] opacity-0 group-hover:opacity-100 transition-opacity duration-200'></i>
+                  <span>{{ rel.duration }}</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Footer section -->
+      <div class="mt-20">
+        <app-footer></app-footer>
+      </div>
+
+    </div>
+
+  </div>
+</div>

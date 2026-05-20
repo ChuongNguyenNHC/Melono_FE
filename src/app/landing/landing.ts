@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Footer } from '../footer/footer';
 import { MusicService, Song } from '../services/music.service';
 import { PlayerService } from '../services/player.service';
@@ -28,7 +28,7 @@ interface Mood {
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, Footer],
+  imports: [CommonModule, RouterModule, Footer],
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })

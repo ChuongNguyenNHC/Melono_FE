@@ -19,17 +19,17 @@
   <div *ngIf="isExpanded" class="flex flex-col gap-3">
     <!-- Top: Info -->
     <div class="flex items-center gap-3 w-full">
-      <div class="relative group w-[56px] h-[56px] shrink-0 cursor-pointer">
+      <div [routerLink]="['/song', song.id]" class="relative group w-[56px] h-[56px] shrink-0 cursor-pointer">
         <img [src]="song.coverUrl" alt="cover"
           class="w-full h-full object-cover rounded shadow-md group-hover:opacity-80 transition-opacity">
         <div
           class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded">
-          <i class='bx bx-chevron-down text-2xl relative'></i>
+          <i class='bx bx-show text-2xl relative'></i>
         </div>
       </div>
 
       <div class="flex flex-col truncate flex-1 justify-center">
-        <span class="font-bold text-[14px] hover:underline cursor-pointer truncate pb-[2px]">{{ song.title }}</span>
+        <span [routerLink]="['/song', song.id]" class="font-bold text-[14px] hover:underline cursor-pointer truncate pb-[2px]">{{ song.title }}</span>
         <span class="text-[12px] text-gray-400 hover:text-white hover:underline cursor-pointer truncate">{{ song.artist
           }}</span>
       </div>
@@ -42,11 +42,14 @@
     <div class="flex flex-col w-full mt-1">
       <div class="flex items-center justify-center gap-4 mb-2">
         <button (click)="toggleShuffle()" 
+          [disabled]="isShuffleDisabled(song)"
           class="transition-colors" 
-          [class.text-[#1ed760]]="(playerService.isShuffle$ | async)"
-          [class.text-gray-400]="!(playerService.isShuffle$ | async)"
-          [class.hover:text-white]="!(playerService.isShuffle$ | async)"
-          title="Bật trộn bài">
+          [class.text-[#1ed760]]="(playerService.isShuffle$ | async) && !isShuffleDisabled(song)"
+          [class.text-gray-400]="!(playerService.isShuffle$ | async) || isShuffleDisabled(song)"
+          [class.hover:text-white]="!(playerService.isShuffle$ | async) && !isShuffleDisabled(song)"
+          [class.opacity-30]="isShuffleDisabled(song)"
+          [class.cursor-not-allowed]="isShuffleDisabled(song)"
+          [title]="isShuffleDisabled(song) ? 'Không thể trộn bài (Bài hát không thuộc playlist nào)' : 'Bật trộn bài'">
           <i class='bx bx-shuffle text-[18px]'></i>
         </button>
 
@@ -83,7 +86,7 @@
         <span class="text-[10px] text-gray-400 min-w-[30px] text-right font-medium tracking-wide">{{ formatTime(currentTime) }}</span>
         <div class="h-1.5 bg-[#4d4d4d] rounded-full flex-1 group/progress cursor-pointer relative flex items-center">
           <div class="absolute inset-y-0 left-0 h-full bg-white group-hover/progress:bg-[#1ed760] rounded-full z-10 transition-colors pointer-events-none" [style.width.%]="progressPercent"></div>
-          <div class="absolute w-3 h-3 bg-white rounded-full opacity-0 group-hover/progress:opacity-100 z-20 shadow transform -translate-x-1/2 pointer-events-none" [style.left.%]="progressPercent"></div>
+          <div class="absolute w-3 h-3 bg-white rounded-full opacity-0 group-hover/progress:opacity-100 z-20 shadow transform -translate-x-1/2 top-[-3px] pointer-events-none" [style.left.%]="progressPercent"></div>
           <input type="range" class="w-full h-full absolute inset-0 opacity-0 z-30 cursor-pointer" min="0" [max]="duration || 0.1" step="0.1" [value]="currentTime" (input)="onSeek($event)">
         </div>
         <span class="text-[10px] text-gray-400 min-w-[30px] font-medium tracking-wide">{{ formatTime(duration) }}</span>
@@ -91,24 +94,27 @@
     </div>
 
     <!-- Bottom: Volume (Only shows slider on hover) -->
-    <div class="flex items-center justify-end w-full group/volcontainer mt-1">
-      <div class="flex items-center relative gap-2">
-        <!-- The slider container -->
+    <div class="flex items-center justify-end w-full group/volcontainer mt-1 h-6">
+      <div class="flex items-center relative gap-2 h-full">
+        <!-- Outer wrapper with overflow-hidden to animate width safely -->
         <div
-          class="w-0 opacity-0 group-hover/volcontainer:w-24 group-hover/volcontainer:opacity-100 overflow-hidden transition-all duration-300 ease-out flex items-center h-1.5 bg-[#4d4d4d] rounded-full cursor-pointer relative group/slider">
-          <div
-            class="h-full bg-white group-hover/slider:bg-[#1ed760] rounded-full transition-colors absolute top-0 left-0 min-w-[2px]"
-            [style.width.%]="volume * 100">
+          class="w-0 opacity-0 group-hover/volcontainer:w-24 group-hover/volcontainer:opacity-100 overflow-hidden transition-all duration-300 ease-out flex items-center h-6 relative">
+          <!-- Inner slider track container without overflow-hidden -->
+          <div class="h-1.5 bg-[#4d4d4d] rounded-full w-full cursor-pointer relative flex items-center group/slider mx-1.5">
+            <div
+              class="h-full bg-white group-hover/slider:bg-[#1ed760] rounded-full transition-colors absolute top-0 left-0 min-w-[2px]"
+              [style.width.%]="volume * 100">
+            </div>
+            <div
+              class="absolute w-3 h-3 bg-white rounded-full opacity-0 group-hover/slider:opacity-100 shadow border border-white transform -translate-x-1/2 top-[-3px]"
+              [style.left.%]="volume * 100">
+            </div>
+            <input type="range" min="0" max="1" step="0.01" [value]="volume" (input)="onVolumeChange($event)"
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
           </div>
-          <div
-            class="absolute w-3 h-3 bg-white rounded-full opacity-0 group-hover/slider:opacity-100 shadow border border-white transform -translate-x-1/2 -mt-px"
-            [style.left.%]="volume * 100">
-          </div>
-          <input type="range" min="0" max="1" step="0.01" [value]="volume" (input)="onVolumeChange($event)"
-            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
         </div>
         <!-- Volume Icon ALWAYS visible -->
-        <button class="text-gray-400 hover:text-white transition-colors" title="Âm lượng" (click)="toggleMute()">
+        <button class="text-gray-400 hover:text-white transition-colors flex items-center justify-center" title="Âm lượng" (click)="toggleMute()">
           <i class='bx text-[20px]'
             [ngClass]="volume === 0 ? 'bx-volume-mute' : (volume < 0.5 ? 'bx-volume-low' : 'bx-volume-full')"></i>
         </button>

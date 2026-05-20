@@ -62,7 +62,7 @@ export class Login {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.message || 'Sai tên đăng nhập hoặc mật khẩu.';
+        this.errorMessage = err.error?.message || 'Sai địa chỉ email hoặc mật khẩu.';
         this.cdr.detectChanges();
       }
     });
@@ -79,15 +79,32 @@ export class Login {
       return;
     }
 
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(this.regEmail.trim())) {
+      this.errorMessage = 'Định dạng email không hợp lệ.';
+      return;
+    }
+
     this.errorMessage = '';
     this.successMessage = '';
     this.isLoading = true;
 
     this.authService.register(this.regUsername, this.regEmail, this.regPassword).subscribe({
       next: () => {
-        // Tắt trạng thái loading trước
+        // Tắt trạng thái loading và xóa sạch các ô nhập liệu đăng ký ngay lập tức
         this.zone.run(() => {
           this.isLoading = false;
+          
+          // Điền sẵn email đăng ký vào khung đăng nhập
+          this.email = this.regEmail;
+          this.password = '';
+          
+          // Xóa sạch dữ liệu các ô nhập liệu của form đăng ký ngay lập tức
+          this.regUsername = '';
+          this.regEmail = '';
+          this.regPassword = '';
+          this.regConfirmPassword = '';
+          
           this.cdr.detectChanges();
         });
 
@@ -104,20 +121,9 @@ export class Login {
             popup: 'rounded-3xl border border-white/5 shadow-2xl font-sans'
           }
         }).then(() => {
-          // Sau khi SweetAlert đóng (hết 1.5 giây hoặc click tắt), thực hiện trượt sang khung đăng nhập
+          // Sau khi SweetAlert đóng, thực hiện trượt sang khung đăng nhập
           this.zone.run(() => {
             this.isLoginMode = true;
-            
-            // Điền sẵn email đăng ký vào khung đăng nhập
-            this.email = this.regEmail;
-            this.password = '';
-            
-            // Xóa dữ liệu các ô nhập liệu của form đăng ký
-            this.regUsername = '';
-            this.regEmail = '';
-            this.regPassword = '';
-            this.regConfirmPassword = '';
-            
             this.cdr.detectChanges();
           });
         });
@@ -125,7 +131,7 @@ export class Login {
       error: (err) => {
         this.zone.run(() => {
           this.isLoading = false;
-          this.errorMessage = err.error?.message || 'Đăng ký thất bại. Tên đăng nhập hoặc email đã tồn tại.';
+          this.errorMessage = err.error?.message || 'Đăng ký thất bại. Email này đã tồn tại trên hệ thống.';
           this.cdr.detectChanges();
         });
       }

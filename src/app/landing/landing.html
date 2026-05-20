@@ -17,7 +17,17 @@
           <div *ngFor="let song of recentSongs" (click)="playSong(song, recentSongs)"
             class="group flex items-center bg-white/5 hover:bg-white/20 rounded-md overflow-hidden cursor-pointer transition-colors relative">
             <img [src]="song.coverUrl" [alt]="song.title" class="w-16 h-16 object-cover shadow-md">
-            <span class="font-bold text-white px-4 truncate flex-1">{{ song.title }}</span>
+            <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+              class="font-bold text-white px-4 truncate flex-1 hover:underline hover:text-[#1ed760] transition-colors block"
+              [title]="song.title">
+              {{ song.title }}
+            </a>
+            <!-- Info button on hover -->
+            <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+              class="absolute right-16 w-10 h-10 bg-black/60 hover:bg-black/80 text-white hover:text-[#1ed760] rounded-full flex items-center justify-center opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-lg hover:scale-105"
+              title="Xem chi tiết">
+              <i class='bx bx-info-circle text-2xl'></i>
+            </a>
             <!-- Small play button -->
             <button
               class="absolute right-4 w-10 h-10 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-lg hover:scale-105">
@@ -51,15 +61,22 @@
                 </div>
               </div>
               <div class="flex flex-col">
-                <span
-                  class="font-bold text-white group-hover:text-[#1ed760] transition-colors truncate max-w-[200px] sm:max-w-[300px]">{{
-                  song.title }}</span>
+                <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                  class="font-bold text-white hover:underline hover:text-[#1ed760] transition-colors truncate max-w-[200px] sm:max-w-[300px] block"
+                  [title]="song.title">
+                  {{ song.title }}
+                </a>
                 <span class="text-sm text-gray-400 hover:underline truncate">{{ song.artist }}</span>
               </div>
             </div>
             <!-- Right side: Plays, Duration -->
             <div class="flex items-center space-x-6 text-gray-400 text-sm">
               <span class="hidden md:inline-block">{{ song.plays }} lượt nghe</span>
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#1ed760] transition-colors animate-fade-in"
+                title="Xem chi tiết">
+                <i class='bx bx-info-circle text-lg'></i>
+              </a>
               <span class="hidden sm:inline-block text-right w-12">{{ song.duration }}</span>
               <button class="text-gray-400 hover:text-white transition-colors duration-200">
                 <i class='bx bx-dots-horizontal-rounded text-xl'></i>
@@ -155,6 +172,12 @@
             <div
               class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
               <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover">
+              <!-- Info Button Overlay -->
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white hover:text-[#1ed760] rounded-full flex items-center justify-center opacity-0 translate-y-[-8px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-lg hover:scale-105"
+                title="Xem chi tiết">
+                <i class='bx bx-info-circle text-xl'></i>
+              </a>
               <!-- Play Button Overlay -->
               <button
                 class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
@@ -164,7 +187,11 @@
 
             <!-- Info -->
             <div class="flex flex-col">
-              <h3 class="font-bold text-[15px] text-white mb-1 truncate" [title]="song.title">{{ song.title }}</h3>
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="font-bold text-[15px] text-white mb-1 truncate hover:underline hover:text-[#1ed760] transition-colors block"
+                [title]="song.title">
+                {{ song.title }}
+              </a>
               <p class="text-[13px] text-gray-400 truncate" [title]="song.artist">{{ song.artist }}</p>
             </div>
           </div>
@@ -182,13 +209,23 @@
             <div
               class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
               <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover">
+              <!-- Info Button Overlay -->
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white hover:text-[#1ed760] rounded-full flex items-center justify-center opacity-0 translate-y-[-8px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-lg hover:scale-105"
+                title="Xem chi tiết">
+                <i class='bx bx-info-circle text-xl'></i>
+              </a>
               <button
                 class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
                 <i class='bx bx-play text-3xl ml-1'></i>
               </button>
             </div>
             <div class="flex flex-col">
-              <h3 class="font-bold text-[15px] text-white mb-1 truncate" [title]="song.title">{{ song.title }}</h3>
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="font-bold text-[15px] text-white mb-1 truncate hover:underline hover:text-[#1ed760] transition-colors block"
+                [title]="song.title">
+                {{ song.title }}
+              </a>
               <p class="text-[13px] text-gray-400 truncate" [title]="song.artist">{{ song.artist }}</p>
             </div>
           </div>
@@ -206,13 +243,23 @@
             <div
               class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
               <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover">
+              <!-- Info Button Overlay -->
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white hover:text-[#1ed760] rounded-full flex items-center justify-center opacity-0 translate-y-[-8px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-lg hover:scale-105"
+                title="Xem chi tiết">
+                <i class='bx bx-info-circle text-xl'></i>
+              </a>
               <button
                 class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
                 <i class='bx bx-play text-3xl ml-1'></i>
               </button>
             </div>
             <div class="flex flex-col">
-              <h3 class="font-bold text-[15px] text-white mb-1 truncate" [title]="song.title">{{ song.title }}</h3>
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="font-bold text-[15px] text-white mb-1 truncate hover:underline hover:text-[#1ed760] transition-colors block"
+                [title]="song.title">
+                {{ song.title }}
+              </a>
               <p class="text-[13px] text-gray-400 truncate" [title]="song.artist">{{ song.artist }}</p>
             </div>
           </div>
@@ -230,13 +277,23 @@
             <div
               class="relative w-full aspect-square mb-4 shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden rounded-md">
               <img [src]="song.coverUrl" [alt]="song.title" class="w-full h-full object-cover">
+              <!-- Info Button Overlay -->
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white hover:text-[#1ed760] rounded-full flex items-center justify-center opacity-0 translate-y-[-8px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-lg hover:scale-105"
+                title="Xem chi tiết">
+                <i class='bx bx-info-circle text-xl'></i>
+              </a>
               <button
                 class="absolute bottom-2 right-2 w-12 h-12 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:scale-105 hover:bg-[#1fdf64]">
                 <i class='bx bx-play text-3xl ml-1'></i>
               </button>
             </div>
             <div class="flex flex-col">
-              <h3 class="font-bold text-[15px] text-white mb-1 truncate" [title]="song.title">{{ song.title }}</h3>
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="font-bold text-[15px] text-white mb-1 truncate hover:underline hover:text-[#1ed760] transition-colors block"
+                [title]="song.title">
+                {{ song.title }}
+              </a>
               <p class="text-[13px] text-gray-400 truncate" [title]="song.artist">{{ song.artist }}</p>
             </div>
           </div>

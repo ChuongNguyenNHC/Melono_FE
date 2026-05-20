@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { MusicSong } from '../models/music-domain.models';
 import { MusicLibraryService } from '../services/music-library.service';
 import { MusicService, Song } from '../services/music.service';
@@ -9,7 +10,7 @@ import { PlayerService } from '../services/player.service';
 @Component({
   selector: 'app-genre',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './genre.html',
   styleUrl: './genre.css',
 })

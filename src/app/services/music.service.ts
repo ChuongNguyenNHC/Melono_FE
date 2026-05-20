@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of, catchError } from 'rxjs';
 import { MusicLibraryService } from './music-library.service';
 
 export interface Song {
@@ -11,6 +11,9 @@ export interface Song {
   previewUrl: string;
   duration: string;
   plays: string;
+  genre?: string;
+  releaseDate?: string;
+  copyright?: string;
 }
 
 export interface ItunesPlaylist {
@@ -28,6 +31,52 @@ export interface ItunesPlaylist {
 export class MusicService {
   private http = inject(HttpClient);
   private musicLibraryService = inject(MusicLibraryService);
+
+  getSongDetail(id: string): Observable<Song | null> {
+    if (!id) return of(null);
+    const idStr = String(id);
+    
+    // Nếu là nhạc Local
+    if (idStr.startsWith('s')) {
+      const local = this.musicLibraryService.getSongById(idStr);
+      if (local) {
+        return of({
+          id: local.id,
+          title: local.title,
+          artist: local.artistName,
+          coverUrl: local.thumbnailUrl,
+          previewUrl: local.fileUrl || local.previewUrl || '',
+          duration: local.duration,
+          plays: 'Local',
+          genre: local.genreIds && local.genreIds.length > 0 ? 'Local Pop' : 'General'
+        });
+      }
+    }
+    
+    // Nếu là nhạc iTunes
+    const cleanId = idStr.replace('itunes-', '');
+    return this.http.get<any>(`https://itunes.apple.com/lookup?id=${cleanId}`).pipe(
+      map(res => {
+        if (res.results && res.results.length > 0) {
+          const item = res.results[0];
+          return {
+            id: `itunes-${item.trackId}`,
+            title: item.trackName,
+            artist: item.artistName,
+            coverUrl: item.artworkUrl100 ? item.artworkUrl100.replace('100x100', '500x500') : '',
+            previewUrl: item.previewUrl,
+            duration: this.formatDuration(item.trackTimeMillis),
+            plays: Math.floor(Math.random() * 900 + 100) + 'M',
+            genre: item.primaryGenreName,
+            releaseDate: item.releaseDate,
+            copyright: item.copyright
+          };
+        }
+        return null;
+      }),
+      catchError(() => of(null))
+    );
+  }
 
   searchSongs(term: string, limit: number = 10): Observable<Song[]> {
     return this.searchItunesSongs(term, limit).pipe(

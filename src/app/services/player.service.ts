@@ -15,6 +15,14 @@ export class PlayerService {
   private isPlayingSubject = new BehaviorSubject<boolean>(false);
   public isPlaying$ = this.isPlayingSubject.asObservable();
 
+  get currentSong(): Song | null {
+    return this.currentSongSubject.value;
+  }
+
+  get isPlaying(): boolean {
+    return this.isPlayingSubject.value;
+  }
+
   private shuffleSubject = new BehaviorSubject<boolean>(false);
   public isShuffle$ = this.shuffleSubject.asObservable();
 
@@ -134,10 +142,9 @@ export class PlayerService {
   }
 
   toggleRepeat() {
-    const modes: ('none' | 'all' | 'one')[] = ['none', 'all', 'one'];
-    const currentIdx = modes.indexOf(this.repeatSubject.value);
-    const nextIdx = (currentIdx + 1) % modes.length;
-    this.repeatSubject.next(modes[nextIdx]);
+    // Chỉ cho phép chế độ lặp lại bài hát hiện tại ('one') hoặc không lặp lại ('none')
+    const nextMode = this.repeatSubject.value === 'none' ? 'one' : 'none';
+    this.repeatSubject.next(nextMode);
   }
 
   private handleSongEnded() {
