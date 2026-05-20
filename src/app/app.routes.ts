@@ -39,6 +39,12 @@ export const routes: Routes = [
     data: { layout: 'minimal' },
   },
   {
+    path: 'profile',
+    title: 'Hồ sơ cá nhân | Melono',
+    loadComponent: () => import('./auth/profile/profile').then(m => m.Profile),
+    canActivate: [authGuard],
+  },
+  {
     path: 'auth/login',
     redirectTo: '/login',
     pathMatch: 'full',
@@ -54,6 +60,12 @@ export const routes: Routes = [
     path: 'playlist/:id',
     title: 'Playlist | Melono',
     loadComponent: () => import('./playlistdetail/playlistdetail').then(m => m.PlaylistDetail),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'song/:id',
+    title: 'Chi tiết bài hát | Melono',
+    loadComponent: () => import('./songdetail/songdetail').then(m => m.SongDetail),
     canActivate: [authGuard],
   },
   {

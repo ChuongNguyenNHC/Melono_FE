@@ -1,4 +1,4 @@
-<div class="relative h-full flex-1 overflow-y-auto bg-[#121212] font-sans text-white scrollbar-hide">
+<div class="relative h-full flex-1 overflow-y-auto overflow-x-hidden bg-[#121212] font-sans text-white scrollbar-hide">
   <div class="relative flex min-h-[360px] items-end gap-6 bg-linear-to-b px-8 pb-9 pt-24" [ngClass]="playlistData.bgColor">
     <button type="button" (click)="goBackToLibrary()" class="absolute left-8 top-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white transition hover:bg-black/50">
       <i class='bx bx-chevron-left text-3xl'></i>
@@ -102,12 +102,15 @@
         <div class="flex min-w-0 items-center gap-3">
           <img [src]="song.coverUrl" [alt]="song.title" class="h-11 w-11 shrink-0 rounded object-cover shadow-md" />
           <div class="min-w-0">
-            <p class="truncate font-medium transition group-hover:text-[#1ed760]">{{ song.title }}</p>
+            <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()" class="truncate font-medium transition hover:underline hover:text-[#1ed760] text-white block">{{ song.title }}</a>
             <p class="truncate text-sm text-gray-400 md:hidden">{{ song.artist }}</p>
           </div>
         </div>
         <div class="hidden truncate pr-4 text-sm text-gray-400 md:block">{{ song.artist }}</div>
         <div class="flex items-center justify-center gap-3 text-sm text-gray-400">
+          <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()" class="opacity-0 transition group-hover:opacity-100 hover:text-[#1ed760]" title="Xem chi tiết">
+            <i class='bx bx-info-circle text-lg'></i>
+          </a>
           <i class='bx bx-heart opacity-0 transition group-hover:opacity-100'></i>
           <span>{{ song.duration }}</span>
         </div>

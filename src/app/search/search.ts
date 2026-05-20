@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Footer } from '../footer/footer';
 import { MusicService, Song } from '../services/music.service';
 import { PlayerService } from '../services/player.service';
@@ -8,7 +8,7 @@ import { PlayerService } from '../services/player.service';
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [CommonModule, Footer],
+  imports: [CommonModule, Footer, RouterModule],
   templateUrl: './search.html',
   styleUrl: './search.css'
 })

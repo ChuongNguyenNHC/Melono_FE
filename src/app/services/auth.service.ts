@@ -66,6 +66,38 @@ export class AuthService {
     });
   }
 
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(email: string, code: string, newPassword: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/reset-password`, {
+      email,
+      code,
+      newPassword
+    });
+  }
+
+  updateProfile(userId: string, data: { username?: string; stageName?: string; avatarUrl?: string; currentPassword?: string; newPassword?: string; }): Observable<User> {
+    return this.http.put<any>(`http://localhost:8080/api/users/${userId}/profile`, data).pipe(
+      map(response => {
+        const currentUser = this.currentUserValue;
+        if (currentUser && currentUser.id === userId) {
+          const updatedUser: User = {
+            ...currentUser,
+            name: response.stageName || response.username,
+            username: response.username,
+            avatarUrl: response.avatarUrl || 'https://ui-avatars.com/api/?name=' + response.username + '&background=1ed760&color=fff',
+          };
+          localStorage.setItem('mockUser', JSON.stringify(updatedUser));
+          this.currentUserSubject.next(updatedUser);
+          return updatedUser;
+        }
+        return currentUser!;
+      })
+    );
+  }
+
   logout() {
     localStorage.removeItem('mockUser');
     localStorage.removeItem('token');

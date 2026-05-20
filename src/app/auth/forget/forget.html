@@ -14,10 +14,10 @@
 
     <!-- Bắt đầu Dialog -->
     <div class="
-        relative w-[480px] max-w-full h-[520px] 
+        relative w-[480px] max-w-full h-[580px] 
         bg-[#1c1c28]/80 backdrop-blur-xl rounded-3xl 
         shadow-2xl overflow-hidden border border-white/5 
-        flex flex-col pt-10 pb-8">
+        flex flex-col pt-8 pb-8">
         <!-- Nút quay lại login nằm tĩnh ở góc -->
         <a href="/login" class="
             absolute top-4 left-4 text-gray-400 hover:text-white 
@@ -34,14 +34,14 @@
             transition-transform duration-500 ease-in-out" [class.translate-x-0]="step === 1"
                 [class.-translate-x-full]="step === 2">
 
-                <div class="text-center mb-8">
+                <div class="text-center mb-6">
                     <div class="
-                    inline-flex items-center justify-center w-16 h-16 
-                    rounded-full bg-white/5 border border-white/10 mb-5 
+                    inline-flex items-center justify-center w-14 h-14 
+                    rounded-full bg-white/5 border border-white/10 mb-3 
                     text-[#1ed760] shadow-[0_0_15px_rgba(30,215,96,0.15)]">
-                        <i class='bx bx-fingerprint text-[32px]'></i>
+                        <i class='bx bx-fingerprint text-[28px]'></i>
                     </div>
-                    <h2 class="text-2xl font-bold text-white tracking-wider mb-2">Khôi phục mật khẩu</h2>
+                    <h2 class="text-2xl font-bold text-white tracking-wider mb-1">Khôi phục mật khẩu</h2>
                     <p class="text-gray-400 text-[13px] px-2 leading-relaxed">
                         Nhập email đăng ký tài khoản Melono của bạn để nhận mã định danh OTP.
                     </p>
@@ -55,7 +55,7 @@
                             group-focus-within:text-[#1ed760] transition-colors
                         "></i>
                         </div>
-                        <input type="email" placeholder="Nhập địa chỉ Email" class="
+                        <input type="email" [(ngModel)]="email" name="email" placeholder="Nhập địa chỉ Email" class="
                         w-full pl-12 pr-4 py-3.5 bg-[#252533] 
                         border border-transparent rounded-xl 
                         focus:outline-none focus:border-[#1ed760] focus:ring-1 focus:ring-[#1ed760] 
@@ -70,20 +70,31 @@
                                 bx bx-dialpad text-[22px] text-gray-400 
                                 group-focus-within:text-[#1ed760] transition-colors"></i>
                             </div>
-                            <input type="text" placeholder="Mã OTP" maxlength="6" class="
+                            <input type="text" [(ngModel)]="otpCode" name="otpCode" placeholder="Mã OTP" maxlength="6" class="
                             w-full pl-12 pr-4 py-3.5 bg-[#252533] 
                             border border-transparent rounded-xl 
                             focus:outline-none focus:border-[#1ed760] focus:ring-1 focus:ring-[#1ed760] 
                             text-gray-100 placeholder-gray-500 transition-all 
                             tracking-widest font-mono text-[15px]">
                         </div>
-                        <button class="
+                        <button type="button" (click)="sendOtp()" [disabled]="isSendingOtp" class="
                         px-5 py-3.5 bg-[#252533] border border-white/5 
                         hover:bg-[#2d2d3d] hover:border-white/10 text-[#1ed760] 
-                        font-medium rounded-xl transition-all whitespace-nowrap text-[14px]">
-                            Gửi mã
+                        font-medium rounded-xl transition-all whitespace-nowrap text-[14px]
+                        disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-1">
+                            <span *ngIf="!isSendingOtp">Gửi mã</span>
+                            <span *ngIf="isSendingOtp" class="flex items-center gap-1">
+                                <i class="bx bx-loader-alt animate-spin text-[16px]"></i> Đang gửi...
+                            </span>
                         </button>
                     </div>
+
+                    <p *ngIf="errorMessage && step === 1" class="rounded-xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
+                        {{ errorMessage }}
+                    </p>
+                    <p *ngIf="successMessage" class="rounded-xl bg-[#1ed760]/10 px-4 py-3 text-sm font-semibold text-[#1ed760]">
+                        {{ successMessage }}
+                    </p>
 
                     <!-- Nút mũi tên bấm trượt qua bước 2 -->
                     <button (click)="goToStep2()" class="
@@ -103,14 +114,14 @@
                 transition-transform duration-500 ease-in-out" [class.translate-x-full]="step === 1"
                 [class.translate-x-0]="step === 2">
 
-                <div class="text-center mb-8">
+                <div class="text-center mb-6">
                     <div class="
-                    inline-flex items-center justify-center w-16 h-16 
-                    rounded-full bg-white/5 border border-white/10 mb-5 
+                    inline-flex items-center justify-center w-14 h-14 
+                    rounded-full bg-white/5 border border-white/10 mb-3 
                     text-[#1ed760] shadow-[0_0_15px_rgba(30,215,96,0.15)]">
-                        <i class='bx bx-lock-open-alt text-[32px]'></i>
+                        <i class='bx bx-lock-open-alt text-[28px]'></i>
                     </div>
-                    <h2 class="text-2xl font-bold text-white tracking-wider mb-2">Tạo mật khẩu an toàn</h2>
+                    <h2 class="text-2xl font-bold text-white tracking-wider mb-1">Tạo mật khẩu an toàn</h2>
                     <p class="text-gray-400 text-[13px] px-2 leading-relaxed">
                         Mật khẩu mới của bạn phải khác với các mật khẩu đã được sử dụng trước đây.
                     </p>
@@ -123,7 +134,7 @@
                             bx bx-lock-alt text-[22px] text-gray-400 
                             group-focus-within:text-[#1ed760] transition-colors"></i>
                         </div>
-                        <input type="password" placeholder="Mật khẩu mới" class="
+                        <input type="password" [(ngModel)]="newPassword" name="newPassword" placeholder="Mật khẩu mới" class="
                         w-full pl-12 pr-4 py-3.5 bg-[#252533] 
                         border border-transparent rounded-xl 
                         focus:outline-none focus:border-[#1ed760] focus:ring-1 focus:ring-[#1ed760] 
@@ -135,12 +146,16 @@
                             bx bx-check-shield text-[22px] text-gray-400 
                             group-focus-within:text-[#1ed760] transition-colors"></i>
                         </div>
-                        <input type="password" placeholder="Nhập lại mật khẩu mới" class="
+                        <input type="password" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu mới" class="
                         w-full pl-12 pr-4 py-3.5 bg-[#252533] 
                         border border-transparent rounded-xl 
                         focus:outline-none focus:border-[#1ed760] focus:ring-1 focus:ring-[#1ed760] 
                         text-gray-100 placeholder-gray-500 transition-all text-[15px]">
                     </div>
+
+                    <p *ngIf="errorMessage && step === 2" class="rounded-xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
+                        {{ errorMessage }}
+                    </p>
 
                     <!-- Cụm nút xác nhận -->
                     <div class="flex gap-3 mt-8">
@@ -150,12 +165,16 @@
                         flex items-center justify-center">
                             <i class='bx bx-left-arrow-alt text-[22px]'></i>
                         </button>
-                        <button class="
+                        <button type="button" (click)="resetPassword()" [disabled]="isLoading" class="
                         flex-1 py-3.5 bg-[#1ed760] hover:bg-[#1bc055] text-black 
                         rounded-xl font-bold text-[15px] shadow-[0_0_20px_rgba(30,215,96,0.2)] 
                         hover:shadow-[0_0_25px_rgba(30,215,96,0.4)] transition-all 
-                        transform hover:-translate-y-0.5">
-                            Đổi mật khẩu
+                        transform hover:-translate-y-0.5
+                        disabled:opacity-75 disabled:pointer-events-none flex items-center justify-center gap-2">
+                            <span *ngIf="!isLoading">Đổi mật khẩu</span>
+                            <span *ngIf="isLoading" class="flex items-center gap-2">
+                                <i class="bx bx-loader-alt animate-spin text-[20px]"></i> Đang xử lý...
+                            </span>
                         </button>
                     </div>
                 </div>

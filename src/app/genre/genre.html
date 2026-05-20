@@ -87,17 +87,21 @@
         <span class="text-sm font-bold uppercase tracking-wider text-gray-500">Top songs</span>
       </div>
       <div class="space-y-2">
-        <button *ngFor="let song of chartSongs; let i = index" type="button" (click)="playItunesSong(song)" class="group flex w-full items-center justify-between rounded-md p-2 transition hover:bg-white/10">
+        <div *ngFor="let song of chartSongs; let i = index" (click)="playItunesSong(song)" class="group flex w-full items-center justify-between rounded-md p-2 transition hover:bg-white/10 cursor-pointer">
           <div class="flex min-w-0 items-center gap-4">
             <span class="w-6 text-right font-bold" [ngClass]="i < 3 ? 'text-[#1ed760]' : 'text-gray-500'">{{ i + 1 }}</span>
             <img [src]="song.coverUrl" [alt]="song.title" class="h-12 w-12 rounded object-cover" />
             <div class="min-w-0 text-left">
-              <p class="truncate font-bold group-hover:text-[#1ed760]">{{ song.title }}</p>
+              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+                class="truncate font-bold hover:underline hover:text-[#1ed760] transition-colors block"
+                [title]="song.title">
+                {{ song.title }}
+              </a>
               <p class="truncate text-sm text-gray-500">{{ song.artist }}</p>
             </div>
           </div>
           <span class="hidden text-sm text-gray-500 sm:block">{{ song.duration }}</span>
-        </button>
+        </div>
       </div>
     </section>
   </div>
@@ -109,7 +113,13 @@
         <i class='bx bx-play text-3xl'></i>
       </button>
     </div>
-    <h3 class="mt-4 truncate font-bold">{{ song.title }}</h3>
+    <h3 class="mt-4 truncate font-bold">
+      <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
+        class="text-white hover:underline hover:text-[#1ed760] transition-colors block"
+        [title]="song.title">
+        {{ song.title }}
+      </a>
+    </h3>
     <p class="mt-1 truncate text-sm text-gray-400">{{ song.artist }}</p>
   </ng-template>
 </section>
