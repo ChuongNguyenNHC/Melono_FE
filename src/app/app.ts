@@ -14,21 +14,24 @@ import { Playlistsbar } from './playlistsbar/playlistsbar';
 export class App implements OnInit {
   protected readonly title = signal('frontend');
   protected readonly showPlaylistBar = signal(true);
+  protected readonly showHeader = signal(true);
 
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
 
   ngOnInit(): void {
-    this.updatePlaylistVisibility();
+    this.updateLayoutVisibility();
 
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => this.updatePlaylistVisibility());
+    ).subscribe(() => this.updateLayoutVisibility());
   }
 
-  private updatePlaylistVisibility(): void {
+  private updateLayoutVisibility(): void {
     const layout = this.getActiveLayout();
-    this.showPlaylistBar.set(layout !== 'minimal');
+    const isMinimal = layout === 'minimal';
+    this.showPlaylistBar.set(!isMinimal);
+    this.showHeader.set(!isMinimal);
   }
 
   private getActiveLayout(): string | undefined {

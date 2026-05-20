@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login',
@@ -15,23 +16,119 @@ export class Login {
   isLoginMode = true;
   email = '';
   password = '';
+  
+  // Register fields
+  regUsername = '';
+  regEmail = '';
+  regPassword = '';
+  regConfirmPassword = '';
+  
   errorMessage = '';
+  successMessage = '';
+  isLoading = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private zone: NgZone,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   toggleMode() {
     this.isLoginMode = !this.isLoginMode;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.isLoading = false;
+    this.cdr.detectChanges();
   }
 
   onLogin() {
-    const user = this.authService.login(this.email, this.password);
-
-    if (!user) {
-      this.errorMessage = 'Sai tên đăng nhập hoặc mật khẩu.';
+    if (!this.email || !this.password) {
+      this.errorMessage = 'Vui lòng nhập đầy đủ email và mật khẩu.';
       return;
     }
 
     this.errorMessage = '';
-    this.router.navigate([user.role === 'ADMIN' ? '/admin' : user.role === 'ARTIST' ? '/artist' : '/']);
+    this.successMessage = '';
+    this.isLoading = true;
+
+    this.authService.login(this.email, this.password).subscribe({
+      next: (user) => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+        this.router.navigate([
+          user.role === 'ADMIN' ? '/admin' : user.role === 'ARTIST' ? '/artist' : '/'
+        ]);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = err.error?.message || 'Sai tên đăng nhập hoặc mật khẩu.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  onRegister() {
+    if (!this.regUsername || !this.regEmail || !this.regPassword || !this.regConfirmPassword) {
+      this.errorMessage = 'Vui lòng nhập đầy đủ thông tin đăng ký.';
+      return;
+    }
+
+    if (this.regPassword !== this.regConfirmPassword) {
+      this.errorMessage = 'Mật khẩu xác nhận không khớp.';
+      return;
+    }
+
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.isLoading = true;
+
+    this.authService.register(this.regUsername, this.regEmail, this.regPassword).subscribe({
+      next: () => {
+        // Tắt trạng thái loading trước
+        this.zone.run(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
+
+        // Hiển thị SweetAlert thông báo đăng ký thành công
+        Swal.fire({
+          title: 'Đăng ký thành công!',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#1c1c28',
+          color: '#ffffff',
+          iconColor: '#1ed760',
+          customClass: {
+            popup: 'rounded-3xl border border-white/5 shadow-2xl font-sans'
+          }
+        }).then(() => {
+          // Sau khi SweetAlert đóng (hết 1.5 giây hoặc click tắt), thực hiện trượt sang khung đăng nhập
+          this.zone.run(() => {
+            this.isLoginMode = true;
+            
+            // Điền sẵn email đăng ký vào khung đăng nhập
+            this.email = this.regEmail;
+            this.password = '';
+            
+            // Xóa dữ liệu các ô nhập liệu của form đăng ký
+            this.regUsername = '';
+            this.regEmail = '';
+            this.regPassword = '';
+            this.regConfirmPassword = '';
+            
+            this.cdr.detectChanges();
+          });
+        });
+      },
+      error: (err) => {
+        this.zone.run(() => {
+          this.isLoading = false;
+          this.errorMessage = err.error?.message || 'Đăng ký thất bại. Tên đăng nhập hoặc email đã tồn tại.';
+          this.cdr.detectChanges();
+        });
+      }
+    });
   }
 }
