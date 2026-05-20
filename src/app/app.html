@@ -1,5 +1,5 @@
 <div class="h-screen w-full flex flex-col overflow-hidden bg-[#0d0d12]">
-  <app-header class="shrink-0"></app-header>
+  <app-header *ngIf="showHeader()" class="shrink-0"></app-header>
   <div class="flex-1 w-full h-full overflow-hidden flex">
     <app-playlistsbar *ngIf="showPlaylistBar()"></app-playlistsbar>
     <main class="flex-1 w-full h-full overflow-hidden relative">

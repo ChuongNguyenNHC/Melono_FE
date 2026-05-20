@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface User {
   id: string;
@@ -10,46 +12,15 @@ export interface User {
   avatarUrl: string;
 }
 
-interface MockAccount extends User {
-  password: string;
-}
-
-export const MOCK_ACCOUNTS: MockAccount[] = [
-  {
-    id: 'u001',
-    name: 'Nguyễn Hoàng',
-    username: 'user',
-    email: 'user@melono.local',
-    password: 'user123',
-    role: 'USER',
-    avatarUrl: 'https://i.pravatar.cc/100?img=1',
-  },
-  {
-    id: 'u002',
-    name: 'Trần Minh',
-    username: 'artist',
-    email: 'artist@melono.local',
-    password: 'artist123',
-    role: 'ARTIST',
-    avatarUrl: 'https://i.pravatar.cc/100?img=2',
-  },
-  {
-    id: 'u003',
-    name: 'Quản trị viên',
-    username: 'admin',
-    email: 'admin@melono.local',
-    password: 'admin123',
-    role: 'ADMIN',
-    avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=1ed760&color=fff',
-  },
-];
-
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  
+  private http = inject(HttpClient);
+  private apiUrl = 'http://localhost:8080/api/auth';
 
   constructor() {
     // Thử lấy dữ liệu từ localStorage để duy trì trạng thái đăng nhập
@@ -63,35 +34,41 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  login(identifier: string, password: string): User | null {
-    const normalized = identifier.trim().toLowerCase();
-    const account = MOCK_ACCOUNTS.find(
-      item =>
-        (item.email.toLowerCase() === normalized || item.username.toLowerCase() === normalized) &&
-        item.password === password
+  login(identifier: string, password: string): Observable<User> {
+    return this.http.post<any>(`${this.apiUrl}/login`, {
+      username: identifier,
+      password: password
+    }).pipe(
+      map(response => {
+        const backendUser = response.user;
+        const user: User = {
+          id: backendUser.userId,
+          name: backendUser.stageName || backendUser.username,
+          username: backendUser.username,
+          email: backendUser.email,
+          role: backendUser.role,
+          avatarUrl: backendUser.avatarUrl || 'https://ui-avatars.com/api/?name=' + backendUser.username + '&background=1ed760&color=fff',
+        };
+        
+        localStorage.setItem('mockUser', JSON.stringify(user));
+        localStorage.setItem('token', response.token);
+        this.currentUserSubject.next(user);
+        return user;
+      })
     );
+  }
 
-    if (!account) {
-      return null;
-    }
-
-    const mockUser: User = {
-      id: account.id,
-      name: account.name,
-      username: account.username,
-      email: account.email,
-      role: account.role,
-      avatarUrl: account.avatarUrl,
-    };
-    
-    localStorage.setItem('mockUser', JSON.stringify(mockUser));
-    this.currentUserSubject.next(mockUser);
-
-    return mockUser;
+  register(username: string, email: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/register`, {
+      username,
+      email,
+      password
+    });
   }
 
   logout() {
     localStorage.removeItem('mockUser');
+    localStorage.removeItem('token');
     this.currentUserSubject.next(null);
   }
 }
