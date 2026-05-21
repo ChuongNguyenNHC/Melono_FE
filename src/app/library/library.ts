@@ -6,6 +6,7 @@ import { ItunesPlaylist, MusicService, Song } from '../services/music.service';
 import { PlaylistService, Playlist } from '../services/playlist.service';
 import { PlayerService } from '../services/player.service';
 import { AuthService } from '../services/auth.service';
+import { MusicLibraryService } from '../services/music-library.service';
 
 @Component({
   selector: 'app-library',
@@ -21,6 +22,7 @@ export class Library implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly musicLibraryService = inject(MusicLibraryService);
 
   isPlaylistLocked(playlist: Playlist): boolean {
     const user = this.authService.currentUserValue;
@@ -32,10 +34,90 @@ export class Library implements OnInit {
   playlists: Playlist[] = [];
   followedPlaylists: Playlist[] = [];
   likedSongs: Song[] = [];
+  recentSongs: Song[] = [];
   playlistName = '';
   playlistStatus: 'PUBLIC' | 'PRIVATE' = 'PRIVATE';
   suggestedPlaylists: ItunesPlaylist[] = this.defaultSuggestedPlaylists;
   showAllSuggested = false;
+
+  // Trạng thái Xem Tất Cả & Phân Trang
+  viewMode: 'default' | 'playlists' | 'followed' | 'liked' | 'recent' = 'default';
+  currentPage = 1;
+  pageSize = 10;      // 10 playlist cho mỗi trang (căn chỉnh 5 cột)
+  likedPageSize = 12; // 12 bài hát cho mỗi trang (căn chỉnh 6 cột)
+
+  get totalItems(): number {
+    if (this.viewMode === 'playlists') return this.playlists.length;
+    if (this.viewMode === 'followed') return this.followedPlaylists.length;
+    if (this.viewMode === 'liked') return this.likedSongs.length;
+    if (this.viewMode === 'recent') return this.recentSongs.length;
+    return 0;
+  }
+
+  get activePageSize(): number {
+    return (this.viewMode === 'liked' || this.viewMode === 'recent') ? this.likedPageSize : this.pageSize;
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.activePageSize) || 1;
+  }
+
+  get paginatedPlaylists(): Playlist[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.playlists.slice(start, start + this.pageSize);
+  }
+
+  get paginatedFollowedPlaylists(): Playlist[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.followedPlaylists.slice(start, start + this.pageSize);
+  }
+
+  get paginatedLikedSongs(): Song[] {
+    const start = (this.currentPage - 1) * this.likedPageSize;
+    return this.likedSongs.slice(start, start + this.likedPageSize);
+  }
+
+  get paginatedRecentSongs(): Song[] {
+    const start = (this.currentPage - 1) * this.likedPageSize;
+    return this.recentSongs.slice(start, start + this.likedPageSize);
+  }
+
+  setViewMode(mode: 'default' | 'playlists' | 'followed' | 'liked' | 'recent'): void {
+    this.viewMode = mode;
+    this.currentPage = 1;
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+  }
+
+  getPages(): number[] {
+    const pages = [];
+    for (let i = 1; i <= this.totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  getDetailTitle(): string {
+    switch (this.viewMode) {
+      case 'playlists':
+        return `Danh sách phát của bạn`;
+      case 'followed':
+        return `Danh sách phát đã theo dõi`;
+      case 'liked':
+        return `Bài hát yêu thích của bạn`;
+      case 'recent':
+        return `Bài hát đã nghe gần đây`;
+      default:
+        return '';
+    }
+  }
+
+  isSongLiked(song: Song): boolean {
+    return this.playlistService.isSongLiked(song);
+  }
 
   ngOnInit(): void {
     // 1. Kết nối Real Playlist API
@@ -59,6 +141,28 @@ export class Library implements OnInit {
       next: (data) => {
         this.likedSongs = data;
         this.cdr.detectChanges();
+      }
+    });
+
+    // 2b. Kết nối Listen History (Nghe gần đây)
+    this.musicLibraryService.currentUserLibrary$.subscribe({
+      next: (library) => {
+        if (library && library.listenHistory) {
+          this.recentSongs = library.listenHistory.map(s => {
+            const isItunes = s.source === 'ITUNES' || s.itunesId != null;
+            return {
+              id: s.id,
+              title: s.title,
+              artist: s.artistName,
+              coverUrl: s.thumbnailUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=100&auto=format&fit=crop',
+              previewUrl: s.previewUrl || s.fileUrl || '',
+              duration: isItunes ? '0:30' : s.duration,
+              plays: s.listenCount ? String(s.listenCount) : '0',
+              itunesId: s.itunesId
+            };
+          });
+          this.cdr.detectChanges();
+        }
       }
     });
 
@@ -119,6 +223,10 @@ export class Library implements OnInit {
 
   trackBySongId(index: number, song: Song): string | number {
     return song.id;
+  }
+
+  trackByPlaylistId(index: number, playlist: Playlist): string | number {
+    return playlist.playlistId || index;
   }
 
   // Bỏ thích bài hát trực tiếp qua Real API

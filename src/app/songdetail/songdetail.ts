@@ -123,28 +123,60 @@ export class SongDetail implements OnInit, OnDestroy {
   }
 
   fetchArtistSongs(artist: string) {
-    // Lấy bài hát cùng nghệ sĩ từ database nội bộ (chỉ bài đã duyệt, loại trừ bài hiện tại)
-    const allSongs = this.libraryService.snapshot.songs;
-    const normalizedArtist = artist.trim().toLowerCase();
-    const localArtistSongs = allSongs
-      .filter(s =>
-        s.status === 'APPROVED' &&
-        s.artistName.trim().toLowerCase() === normalizedArtist &&
-        String(s.id) !== String(this.songId)
-      )
-      .slice(0, 6)
-      .map(s => ({
-        id: s.id,
-        title: s.title,
-        artist: s.artistName,
-        coverUrl: s.thumbnailUrl,
-        previewUrl: s.fileUrl || s.previewUrl || '',
-        duration: s.duration,
-        plays: '0',
-      } as Song));
+    const idStr = String(this.songId || '');
+    const isItunes = idStr.startsWith('itunes-') || 
+                     (!isNaN(Number(idStr)) && !idStr.startsWith('s') && !idStr.includes('-')) || 
+                     this.song?.source === 'ITUNES';
 
-    this.artistSongs = localArtistSongs;
-    this.cdr.detectChanges();
+    if (isItunes) {
+      this.musicService.searchItunesSongs(artist, 15).subscribe({
+        next: songs => {
+          // Lọc ra bài hát hiện tại
+          const cleanCurrentId = this.songId?.replace('itunes-', '') || '';
+          this.artistSongs = songs
+            .filter(s => String(s.id) !== cleanCurrentId && String(s.id) !== this.songId)
+            .slice(0, 6)
+            .map(s => ({
+              id: s.id,
+              title: s.title,
+              artist: s.artist,
+              coverUrl: s.coverUrl,
+              previewUrl: s.previewUrl,
+              duration: s.duration,
+              plays: Math.floor(Math.random() * 90) + 10 + 'M'
+            } as Song));
+          this.cdr.detectChanges();
+        },
+        error: err => {
+          console.error('Lỗi khi tải bài hát iTunes cùng nghệ sĩ', err);
+          this.artistSongs = [];
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      // Lấy bài hát cùng nghệ sĩ từ database nội bộ (chỉ bài đã duyệt, loại trừ bài hiện tại)
+      const allSongs = this.libraryService.snapshot.songs;
+      const normalizedArtist = artist.trim().toLowerCase();
+      const localArtistSongs = allSongs
+        .filter(s =>
+          s.status === 'APPROVED' &&
+          s.artistName.trim().toLowerCase() === normalizedArtist &&
+          String(s.id) !== String(this.songId)
+        )
+        .slice(0, 6)
+        .map(s => ({
+          id: s.id,
+          title: s.title,
+          artist: s.artistName,
+          coverUrl: s.thumbnailUrl,
+          previewUrl: s.fileUrl || s.previewUrl || '',
+          duration: s.duration,
+          plays: '0',
+        } as Song));
+
+      this.artistSongs = localArtistSongs;
+      this.cdr.detectChanges();
+    }
   }
 
   checkPlayingState() {

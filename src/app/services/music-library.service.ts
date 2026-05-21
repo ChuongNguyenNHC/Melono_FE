@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, map, tap } from 'rxjs';
+import Swal from 'sweetalert2';
 
 import {
   AppUser,
@@ -44,6 +45,7 @@ export class MusicLibraryService {
 
   constructor() {
     this.fetchSongsFromBackend();
+    this.fetchGenresFromBackend();
   }
 
   private fetchSongsFromBackend(): void {
@@ -56,6 +58,24 @@ export class MusicLibraryService {
         }));
       },
       error: (err) => console.error('Failed to load songs from backend database', err)
+    });
+  }
+
+  private fetchGenresFromBackend(): void {
+    this.http.get<any[]>('http://localhost:8080/api/genres').subscribe({
+      next: (genres) => {
+        const mappedGenres: MusicGenre[] = genres.map(genre => ({
+          id: genre.genreId,
+          name: genre.name,
+          createdAt: genre.createdAt || new Date().toISOString(),
+          createdBy: 'ADMIN'
+        }));
+        this.patchState(state => ({
+          ...state,
+          genres: mappedGenres
+        }));
+      },
+      error: (err) => console.error('Failed to load genres from backend database', err)
     });
   }
 
@@ -508,41 +528,78 @@ export class MusicLibraryService {
     }));
   }
 
+  getUsersPage(search: string, role: string, status: string, page: number, size: number): Observable<any> {
+    let params = `?page=${page}&size=${size}`;
+    if (search && search.trim()) params += `&search=${encodeURIComponent(search.trim())}`;
+    if (role && role !== 'ALL') params += `&role=${role}`;
+    if (status && status !== 'ALL') {
+      const backendStatus = status === 'Active' ? 'ACTIVE' : 'BANNED';
+      params += `&status=${backendStatus}`;
+    }
+
+    return this.http.get<any>(`http://localhost:8080/api/users${params}`);
+  }
+
+  banUserApi(userId: string, reason: string): Observable<any> {
+    const encodedReason = encodeURIComponent(reason.trim());
+    return this.http.put<any>(`http://localhost:8080/api/users/${userId}/ban?reason=${encodedReason}`, {});
+  }
+
+  unbanUserApi(userId: string): Observable<any> {
+    return this.http.put<any>(`http://localhost:8080/api/users/${userId}/unban`, {});
+  }
+
   createGenre(name: string, createdBy: GenreCreatorType = 'ADMIN', createdByUserId?: string): void {
     const normalized = name.trim();
     if (!normalized) return;
 
-    this.patchState(state => ({
-      ...state,
-      genres: [
-        ...state.genres,
-        {
-          id: this.createId('g', state.genres.length + 1),
-          name: normalized,
-          createdAt: now(),
-          createdBy,
-          createdByUserId,
-        },
-      ],
-    }));
+    const payload = {
+      name: normalized
+    };
+
+    this.http.post<any>('http://localhost:8080/api/genres', payload).subscribe({
+      next: (savedGenre) => {
+        const mapped: MusicGenre = {
+          id: savedGenre.genreId,
+          name: savedGenre.name,
+          createdAt: savedGenre.createdAt || new Date().toISOString(),
+          createdBy: 'ADMIN'
+        };
+        this.patchState(state => ({
+          ...state,
+          genres: [mapped, ...state.genres]
+        }));
+      },
+      error: (err) => {
+        console.error('Failed to create genre on backend', err);
+        const errorMsg = err.error?.message || err.message || '';
+        const isDuplicate = err.status === 409 || errorMsg.includes('Đã có thể loại này') || errorMsg.toLowerCase().includes('exists');
+        
+        Swal.fire({
+          title: 'Lỗi!',
+          text: isDuplicate ? 'Đã có thể loại này' : 'Không thể thêm thể loại. Vui lòng thử lại.',
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760'
+        });
+      }
+    });
   }
 
   deleteArtistCreatedGenre(genreId: string): void {
-    this.patchState(state => {
-      const target = state.genres.find(genre => genre.id === genreId);
-
-      if (!target || target.createdBy !== 'ARTIST_REQUEST') {
-        return state;
-      }
-
-      return {
-        ...state,
-        genres: state.genres.filter(genre => genre.id !== genreId),
-        songs: state.songs.map(song => ({
-          ...song,
-          genreIds: song.genreIds.filter(id => id !== genreId),
-        })),
-      };
+    this.http.delete<void>(`http://localhost:8080/api/genres/${genreId}`).subscribe({
+      next: () => {
+        this.patchState(state => ({
+          ...state,
+          genres: state.genres.filter(genre => genre.id !== genreId),
+          songs: state.songs.map(song => ({
+            ...song,
+            genreIds: song.genreIds ? song.genreIds.filter(id => id !== genreId) : []
+          }))
+        }));
+      },
+      error: (err) => console.error('Failed to delete genre on backend', err)
     });
   }
 

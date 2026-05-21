@@ -48,7 +48,6 @@
           <tr class="border-b border-white/10">
             <th class="px-4 py-4 font-medium">T&agrave;i kho&#7843;n</th>
             <th class="px-4 py-4 font-medium">Ngh&#7879; danh</th>
-            <th class="px-4 py-4 font-medium">Th&#7875; lo&#7841;i</th>
             <th class="px-4 py-4 font-medium">Ti&#7875;u s&#7917;</th>
             <th class="px-4 py-4 font-medium">Ng&agrave;y g&#7917;i</th>
             <th class="px-4 py-4 font-medium">Tr&#7841;ng th&aacute;i</th>
@@ -68,7 +67,6 @@
               </div>
             </td>
             <td class="px-4 py-4 font-semibold text-white">{{ request.stageName }}</td>
-            <td class="px-4 py-4">{{ request.genre }}</td>
             <td class="max-w-[300px] px-4 py-4"><p class="line-clamp-2">{{ request.bio }}</p></td>
             <td class="px-4 py-4">{{ request.createdAt }}</td>
             <td class="px-4 py-4 font-medium" [ngClass]="getArtistStatusClass(request.status)">{{ getArtistStatusLabel(request.status) }}</td>
@@ -91,7 +89,7 @@
           </tr>
 
           <tr *ngIf="requests.length === 0">
-            <td colspan="7" class="px-6 py-16 text-center text-slate-500">
+            <td colspan="6" class="px-6 py-16 text-center text-slate-500">
               <i class='bx bx-microphone text-5xl'></i>
               <p class="mt-3 text-sm">Kh&ocirc;ng c&oacute; y&ecirc;u c&#7847;u ngh&#7879; s&#297; ph&ugrave; h&#7907;p</p>
             </td>

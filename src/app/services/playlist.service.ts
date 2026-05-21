@@ -68,15 +68,25 @@ export class PlaylistService {
           previewUrl: s.previewUrl || s.fileUrl || '',
           duration: isItunes ? '0:30' : this.formatDuration(s.duration),
           plays: '0',
-          itunesId: s.itunesId
+          itunesId: s.itunesId,
+          status: s.status
         };
       }))
     );
   }
 
   addSongToPlaylist(playlistId: string, song: Song): Observable<any> {
-    const isItunes = String(song.id).startsWith('itunes-') || typeof song.id === 'number' || !isNaN(Number(song.id));
-    const itunesId = isItunes ? String(song.id).replace('itunes-', '') : null;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const idStr = String(song.id);
+
+    if (uuidRegex.test(idStr)) {
+      return this.http.post(`${this.apiUrl}/${playlistId}/songs/${idStr}`, {}, { responseType: 'text' as 'json' }).pipe(
+        tap(() => this.getUserPlaylists().subscribe())
+      );
+    }
+
+    const isItunes = idStr.startsWith('itunes-') || typeof song.id === 'number' || !isNaN(Number(idStr));
+    const itunesId = isItunes ? idStr.replace('itunes-', '') : null;
 
     const songPayload = {
       title: song.title,
@@ -125,21 +135,44 @@ export class PlaylistService {
     console.log(`%c[API] Đang gọi GET danh sách bài hát yêu thích cho User ID: ${user.id}...`, 'color: #9b59b6; font-weight: bold;');
     
     return this.http.get<any[]>(`http://localhost:8080/api/songs/liked?userId=${user.id}`).pipe(
-      map(songs => songs.map(s => {
-        const isItunes = s.source === 'ITUNES' || s.itunesId != null;
-        return {
-          id: s.songId,
-          title: s.title,
-          artist: s.artistName,
-          coverUrl: s.thumbnailUrl || '',
-          previewUrl: s.previewUrl || s.fileUrl || '',
-          duration: isItunes ? '0:30' : this.formatDuration(s.duration),
-          plays: '0',
-          itunesId: s.itunesId
-        };
-      })),
+      map(songs => {
+        const mapped = songs.map(s => {
+          const isItunes = s.source === 'ITUNES' || s.itunesId != null;
+          return {
+            id: s.songId,
+            title: s.title,
+            artist: s.artistName,
+            coverUrl: s.thumbnailUrl || '',
+            previewUrl: s.previewUrl || s.fileUrl || '',
+            duration: isItunes ? '0:30' : this.formatDuration(s.duration),
+            plays: '0',
+            itunesId: s.itunesId
+          };
+        });
+
+        // Lọc trùng lặp bài hát hiển thị trên giao diện (ví dụ do các bản ghi trùng lặp từ trước)
+        const uniqueSongs: Song[] = [];
+        const seenKeys = new Set<string>();
+
+        for (const song of mapped) {
+          let key = '';
+          if (song.itunesId) {
+            key = `itunes-${song.itunesId}`;
+          } else if (song.previewUrl) {
+            key = `local-url-${song.previewUrl}`;
+          } else {
+            key = `local-title-artist-${song.title.trim().toLowerCase()}-${song.artist.trim().toLowerCase()}`;
+          }
+
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            uniqueSongs.push(song);
+          }
+        }
+        return uniqueSongs;
+      }),
       tap(songs => {
-        console.log(`%c[API] Đã tải về ${songs.length} bài hát yêu thích thành công!`, 'color: #2ecc71; font-weight: bold;', songs);
+        console.log(`%c[API] Đã tải về ${songs.length} bài hát yêu thích thành công! (sau lọc trùng: ${songs.length})`, 'color: #2ecc71; font-weight: bold;', songs);
         this.likedSongsSubject.next(songs);
       })
     );
@@ -200,34 +233,50 @@ export class PlaylistService {
         switchMap(() => this.getLikedSongs()) // Chờ danh sách yêu thích tải xong rồi mới phát tín hiệu hoàn thành
       );
     } else {
-      const songPayload = {
-        title: song.title,
-        artistName: song.artist,
-        source: isItunes ? 'ITUNES' : 'LOCAL',
-        itunesId: itunesId,
-        previewUrl: song.previewUrl,
-        thumbnailUrl: song.coverUrl,
-        duration: this.parseDuration(song.duration)
-      };
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const idStr = String(song.id);
 
-      console.log(`%c[API - Like] Bắt đầu thích bài hát mới/iTunes.`, 'color: #3498db; font-weight: bold;');
-      console.log(`%c[API - Like] Step 1: Tạo/đăng ký thông tin bài hát. Request: POST http://localhost:8080/api/songs`, 'color: #34495e;', songPayload);
+      if (uuidRegex.test(idStr)) {
+        const likeUrl = `http://localhost:8080/api/songs/${idStr}/like?userId=${user.id}`;
+        console.log(`%c[API - Like] Bài hát LOCAL đã tồn tại trên DB.`, 'color: #3498db; font-weight: bold;');
+        console.log(`%c[API - Like] Tiến hành thích trực tiếp bài hát này. Request: POST ${likeUrl}`, 'color: #34495e;');
 
-      return this.http.post<any>('http://localhost:8080/api/songs', songPayload).pipe(
-        switchMap(savedSong => {
-          const songUuid = savedSong.songId;
-          const likeUrl = `http://localhost:8080/api/songs/${songUuid}/like?userId=${user.id}`;
-          console.log(`%c[API - Like] Response Step 1 thành công! Bài hát đã được đăng ký trên DB với UUID: ${songUuid}`, 'color: #2ecc71;', savedSong);
-          console.log(`%c[API - Like] Step 2: Thích bài hát với UUID này. Request: POST ${likeUrl}`, 'color: #34495e;');
-          return this.http.post(likeUrl, {}).pipe(
-            map(() => savedSong)
-          );
-        }),
-        tap(savedSong => {
-          console.log(`%c[API - Like] Response Step 2 thành công! Đã thích bài hát "${song.title}" (UUID: ${savedSong.songId})`, 'color: #2ecc71; font-weight: bold;');
-        }),
-        switchMap(savedSong => this.getLikedSongs().pipe(map(() => savedSong))) // Chờ danh sách yêu thích tải xong rồi mới phát tín hiệu hoàn thành
-      );
+        return this.http.post(likeUrl, {}).pipe(
+          tap(() => {
+            console.log(`%c[API - Like] Response thành công! Đã thích bài hát "${song.title}" (UUID: ${idStr})`, 'color: #2ecc71; font-weight: bold;');
+          }),
+          switchMap(() => this.getLikedSongs())
+        );
+      } else {
+        const songPayload = {
+          title: song.title,
+          artistName: song.artist,
+          source: isItunes ? 'ITUNES' : 'LOCAL',
+          itunesId: itunesId,
+          previewUrl: song.previewUrl,
+          thumbnailUrl: song.coverUrl,
+          duration: this.parseDuration(song.duration)
+        };
+
+        console.log(`%c[API - Like] Bắt đầu thích bài hát mới/iTunes.`, 'color: #3498db; font-weight: bold;');
+        console.log(`%c[API - Like] Step 1: Tạo/đăng ký thông tin bài hát. Request: POST http://localhost:8080/api/songs`, 'color: #34495e;', songPayload);
+
+        return this.http.post<any>('http://localhost:8080/api/songs', songPayload).pipe(
+          switchMap(savedSong => {
+            const songUuid = savedSong.songId;
+            const likeUrl = `http://localhost:8080/api/songs/${songUuid}/like?userId=${user.id}`;
+            console.log(`%c[API - Like] Response Step 1 thành công! Bài hát đã được đăng ký trên DB với UUID: ${songUuid}`, 'color: #2ecc71;', savedSong);
+            console.log(`%c[API - Like] Step 2: Thích bài hát với UUID này. Request: POST ${likeUrl}`, 'color: #34495e;');
+            return this.http.post(likeUrl, {}).pipe(
+              map(() => savedSong)
+            );
+          }),
+          tap(savedSong => {
+            console.log(`%c[API - Like] Response Step 2 thành công! Đã thích bài hát "${song.title}" (UUID: ${savedSong.songId})`, 'color: #2ecc71; font-weight: bold;');
+          }),
+          switchMap(savedSong => this.getLikedSongs().pipe(map(() => savedSong))) // Chờ danh sách yêu thích tải xong rồi mới phát tín hiệu hoàn thành
+        );
+      }
     }
   }
 
@@ -298,18 +347,31 @@ export class PlaylistService {
   }
 
   private parseDuration(duration: string): number {
-    if (!duration) return 180;
+    if (!duration || duration.includes('NaN')) return 180;
     const parts = duration.split(':');
     if (parts.length === 2) {
-      return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+      const minutes = parseInt(parts[0], 10);
+      const seconds = parseInt(parts[1], 10);
+      if (isNaN(minutes) || isNaN(seconds)) return 180;
+      return minutes * 60 + seconds;
     }
-    return parseInt(duration, 10) || 180;
+    const parsed = parseInt(duration, 10);
+    return isNaN(parsed) ? 180 : parsed;
   }
 
-  private formatDuration(seconds: number): string {
+  private formatDuration(seconds: any): string {
     if (!seconds) return '0:00';
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    const durationStr = String(seconds);
+    if (durationStr.includes('NaN')) {
+      return '0:00';
+    }
+    if (durationStr.includes(':')) {
+      return durationStr;
+    }
+    const secs = parseInt(durationStr, 10);
+    if (isNaN(secs)) return '0:00';
+    const minutes = Math.floor(secs / 60);
+    const remSecs = secs % 60;
+    return `${minutes}:${remSecs < 10 ? '0' : ''}${remSecs}`;
   }
 }

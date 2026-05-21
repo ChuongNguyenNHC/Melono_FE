@@ -111,30 +111,45 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <div *ngFor="let song of songs; let i = index; trackBy: trackBySongId" (click)="playSong(song)" class="group grid grid-cols-[48px_minmax(0,1fr)_minmax(160px,0.8fr)_120px] items-center rounded-md p-2 text-left transition hover:bg-white/10 cursor-pointer">
+        <div *ngFor="let song of songs; let i = index; trackBy: trackBySongId" 
+             (click)="playSong(song)" 
+             [ngClass]="{
+               'hover:bg-white/10 cursor-pointer': song.status !== 'HIDDEN' && song.status !== 'Hidden',
+               'cursor-not-allowed opacity-60 bg-white/[0.02]': song.status === 'HIDDEN' || song.status === 'Hidden'
+             }"
+             class="group grid grid-cols-[48px_minmax(0,1fr)_minmax(160px,0.8fr)_120px] items-center rounded-md p-2 text-left transition">
           <div class="relative flex items-center justify-center">
-            <span class="text-gray-400 group-hover:opacity-0">{{ i + 1 }}</span>
-            <i class='bx bx-play absolute text-xl text-white opacity-0 group-hover:opacity-100'></i>
+            <span class="text-gray-400" [ngClass]="{'group-hover:opacity-0': song.status !== 'HIDDEN' && song.status !== 'Hidden', 'text-gray-600': song.status === 'HIDDEN' || song.status === 'Hidden'}">{{ i + 1 }}</span>
+            <i *ngIf="song.status !== 'HIDDEN' && song.status !== 'Hidden'" class='bx bx-play absolute text-xl text-white opacity-0 group-hover:opacity-100'></i>
+            <i *ngIf="song.status === 'HIDDEN' || song.status === 'Hidden'" class='bx bx-block absolute text-base text-red-500 opacity-0 group-hover:opacity-100' title="Bài hát đã bị ẩn"></i>
           </div>
           <div class="flex min-w-0 items-center gap-3">
-            <img [src]="song.coverUrl" [alt]="song.title" class="h-11 w-11 shrink-0 rounded object-cover shadow-md" />
-            <div class="min-w-0">
-              <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()" class="truncate font-medium transition hover:underline hover:text-[#1ed760] text-white block">{{ song.title }}</a>
-              <p class="truncate text-sm text-gray-400 md:hidden">{{ song.artist }}</p>
+            <img [src]="song.coverUrl" [alt]="song.title" [ngClass]="{'opacity-40 grayscale': song.status === 'HIDDEN' || song.status === 'Hidden'}" class="h-11 w-11 shrink-0 rounded object-cover shadow-md" />
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <a *ngIf="song.status !== 'HIDDEN' && song.status !== 'Hidden'; else hiddenTitle" [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()" class="truncate font-medium transition hover:underline hover:text-[#1ed760] text-white block">{{ song.title }}</a>
+                <ng-template #hiddenTitle>
+                  <span class="truncate font-medium text-gray-500" title="Bài hát đã bị ẩn">{{ song.title }}</span>
+                  <span class="shrink-0 inline-flex items-center gap-1 rounded bg-red-500/10 px-2 py-0.5 text-xs font-semibold text-red-400 border border-red-500/20" title="Bài hát đã bị ẩn">
+                    <i class='bx bx-low-vision text-sm'></i> Bài hát đã bị ẩn
+                  </span>
+                </ng-template>
+              </div>
+              <p class="truncate text-sm text-gray-400 md:hidden" [ngClass]="{'text-gray-600': song.status === 'HIDDEN' || song.status === 'Hidden'}">{{ song.artist }}</p>
             </div>
           </div>
-          <div class="hidden truncate pr-4 text-sm text-gray-400 md:block">{{ song.artist }}</div>
+          <div class="hidden truncate pr-4 text-sm text-gray-400 md:block" [ngClass]="{'text-gray-600': song.status === 'HIDDEN' || song.status === 'Hidden'}">{{ song.artist }}</div>
           <div class="flex items-center justify-center gap-3 text-sm text-gray-400">
-            <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()" class="opacity-0 transition group-hover:opacity-100 hover:text-[#1ed760]" title="Xem chi tiết">
+            <a *ngIf="song.status !== 'HIDDEN' && song.status !== 'Hidden'" [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()" class="opacity-0 transition group-hover:opacity-100 hover:text-[#1ed760]" title="Xem chi tiết">
               <i class='bx bx-info-circle text-lg'></i>
             </a>
             <button *ngIf="localPlaylist && isOwner()" type="button" (click)="removeSong(song); $event.stopPropagation()" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all duration-200 flex items-center justify-center hover:scale-110" title="Xóa khỏi playlist">
               <i class='bx bx-minus-circle text-lg'></i>
             </button>
-            <button type="button" (click)="toggleLike(song); $event.stopPropagation()" class="flex items-center justify-center transition-transform hover:scale-110" [ngClass]="isSongLiked(song) ? 'opacity-100 text-[#1ed760]' : 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#1ed760]'" [title]="isSongLiked(song) ? 'Bỏ thích' : 'Thích bài hát'">
+            <button *ngIf="song.status !== 'HIDDEN' && song.status !== 'Hidden'" type="button" (click)="toggleLike(song); $event.stopPropagation()" class="flex items-center justify-center transition-transform hover:scale-110" [ngClass]="isSongLiked(song) ? 'opacity-100 text-[#1ed760]' : 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#1ed760]'" [title]="isSongLiked(song) ? 'Bỏ thích' : 'Thích bài hát'">
               <i class="bx text-lg" [ngClass]="isSongLiked(song) ? 'bxs-heart' : 'bx-heart'"></i>
             </button>
-            <span>{{ song.duration }}</span>
+            <span [ngClass]="{'text-gray-600': song.status === 'HIDDEN' || song.status === 'Hidden'}">{{ song.duration }}</span>
           </div>
         </div>
       </div>

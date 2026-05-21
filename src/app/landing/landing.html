@@ -10,32 +10,6 @@
         <p class="text-gray-300">Những giai điệu đang chờ bạn khám phá hôm nay.</p>
       </div>
 
-      <!-- Recently Played Section -->
-      <section class="mb-14">
-        <h2 class="text-2xl font-bold mb-6 hover:underline cursor-pointer">Nghe gần đây</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div *ngFor="let song of recentSongs" (click)="playSong(song, recentSongs)"
-            class="group flex items-center bg-white/5 hover:bg-white/20 rounded-md overflow-hidden cursor-pointer transition-colors relative">
-            <img [src]="song.coverUrl" [alt]="song.title" class="w-16 h-16 object-cover shadow-md">
-            <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
-              class="font-bold text-white px-4 truncate flex-1 hover:underline hover:text-[#1ed760] transition-colors block"
-              [title]="song.title">
-              {{ song.title }}
-            </a>
-            <!-- Info button on hover -->
-            <a [routerLink]="['/song', song.id]" (click)="$event.stopPropagation()"
-              class="absolute right-16 w-10 h-10 bg-black/60 hover:bg-black/80 text-white hover:text-[#1ed760] rounded-full flex items-center justify-center opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-lg hover:scale-105"
-              title="Xem chi tiết">
-              <i class='bx bx-info-circle text-2xl'></i>
-            </a>
-            <!-- Small play button -->
-            <button
-              class="absolute right-4 w-10 h-10 bg-[#1ed760] text-black rounded-full flex items-center justify-center opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-lg hover:scale-105">
-              <i class='bx bx-play text-2xl ml-1'></i>
-            </button>
-          </div>
-        </div>
-      </section>
 
       <!-- Top Charts Section (List View) -->
       <section class="mb-14">

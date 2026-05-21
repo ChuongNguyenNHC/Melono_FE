@@ -145,12 +145,17 @@ export class PlaylistDetail implements OnInit, OnDestroy {
   }
 
   playSong(song: Song): void {
-    this.playerService.playSong(song, this.songs, true);
+    if (song.status === 'HIDDEN' || song.status === 'Hidden') {
+      return;
+    }
+    const playableSongs = this.songs.filter(s => s.status !== 'HIDDEN' && s.status !== 'Hidden');
+    this.playerService.playSong(song, playableSongs, true);
   }
 
   playAll(): void {
-    if (this.songs.length) {
-      this.playerService.playSong(this.songs[0], this.songs, true);
+    const playableSongs = this.songs.filter(s => s.status !== 'HIDDEN' && s.status !== 'Hidden');
+    if (playableSongs.length) {
+      this.playerService.playSong(playableSongs[0], playableSongs, true);
     }
   }
 
@@ -331,7 +336,7 @@ export class PlaylistDetail implements OnInit, OnDestroy {
         this.editingName = local.name;
         this.editingStatus = local.status;
         const localSongs = this.libraryService.getPlaylistSongs(local.id).map(song => this.toPlayableSong(song));
-        this.songs = localSongs;
+        this.songs = this.sortSongs(localSongs);
         
         // Tự động sinh coverUrl cho local mock playlist dựa vào bài hát cuối cùng
         if (localSongs.length > 0) {
@@ -373,7 +378,7 @@ export class PlaylistDetail implements OnInit, OnDestroy {
           
           this.playlistService.getPlaylistSongs(playlist.playlistId!).subscribe({
             next: (songs) => {
-              this.songs = songs;
+              this.songs = this.sortSongs(songs);
               // Tự động sinh coverUrl cho backend playlist dựa vào bài hát cuối cùng
               if (songs && songs.length > 0) {
                 const lastSong = songs[songs.length - 1];
@@ -450,6 +455,16 @@ export class PlaylistDetail implements OnInit, OnDestroy {
     };
   }
 
+  private sortSongs(songs: Song[]): Song[] {
+    return [...songs].sort((a, b) => {
+      const aHidden = a.status === 'HIDDEN' || a.status === 'Hidden';
+      const bHidden = b.status === 'HIDDEN' || b.status === 'Hidden';
+      if (aHidden && !bHidden) return 1;
+      if (!aHidden && bHidden) return -1;
+      return 0;
+    });
+  }
+
   private toPlayableSong(song: MusicSong): Song {
     return {
       id: song.id,
@@ -459,6 +474,7 @@ export class PlaylistDetail implements OnInit, OnDestroy {
       previewUrl: song.fileUrl || song.previewUrl || '',
       duration: song.duration,
       plays: 'Local',
+      status: song.status,
     };
   }
 }

@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { Footer } from '../footer/footer';
 import { MusicService, Song } from '../services/music.service';
 import { PlayerService } from '../services/player.service';
+import { AuthService } from '../services/auth.service';
 
 interface Playlist {
   id: number;
@@ -37,6 +38,7 @@ export class Landing implements OnInit {
   playerService = inject(PlayerService);
   cdr = inject(ChangeDetectorRef);
   router = inject(Router);
+  authService = inject(AuthService);
 
   topSongs: Song[] = [];
   recentSongs: Song[] = [];
@@ -53,7 +55,20 @@ export class Landing implements OnInit {
   showAllPlaylists = false;
   showAllSongs = false;
   
-  greeting = 'Chào buổi sáng';
+  get greeting(): string {
+    const user = this.authService.currentUserValue;
+    if (user && user.name) {
+      return `Chào ${user.name}`;
+    }
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return 'Chào buổi sáng';
+    } else if (hour < 18) {
+      return 'Chào buổi chiều';
+    } else {
+      return 'Chào buổi tối';
+    }
+  }
 
   topArtists: Artist[] = [];
 
@@ -117,8 +132,6 @@ export class Landing implements OnInit {
   }
 
   ngOnInit() {
-    this.setGreeting();
-
     this.musicService.searchSongs('pop 2024', 12).subscribe({
       next: (songs) => {
         this.topSongs = songs;
@@ -175,17 +188,6 @@ export class Landing implements OnInit {
       },
       error: (err) => console.error(err)
     });
-  }
-
-  setGreeting() {
-    const hour = new Date().getHours();
-    if (hour < 12) {
-      this.greeting = 'Chào buổi sáng';
-    } else if (hour < 18) {
-      this.greeting = 'Chào buổi chiều';
-    } else {
-      this.greeting = 'Chào buổi tối';
-    }
   }
 
   playSong(song: Song, context?: Song[]) {
