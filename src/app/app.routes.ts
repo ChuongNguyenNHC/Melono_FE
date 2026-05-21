@@ -19,7 +19,7 @@ const guestGuard = () => {
     return true;
   }
   const user = authService.currentUserValue;
-  router.navigate([user.role === 'ADMIN' ? '/admin' : user.role === 'ARTIST' ? '/artist' : '/']);
+  router.navigate([user.role === 'ADMIN' ? '/admin' : '/']);
   return false;
 };
 
@@ -97,13 +97,12 @@ export const routes: Routes = [
     title: 'Admin | Melono',
     loadComponent: () => import('./admin/admin').then(m => m.Admin),
     canActivate: [authGuard],
-    data: { layout: 'minimal' },
+    data: { layout: 'admin' },
   },
   {
     path: 'artist',
     title: 'Nghệ sĩ | Melono',
     loadComponent: () => import('./artist/artist').then(m => m.Artist),
     canActivate: [authGuard],
-    data: { layout: 'minimal' },
   },
 ];

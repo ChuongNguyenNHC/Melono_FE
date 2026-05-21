@@ -4,7 +4,7 @@
     <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">Kiểm duyệt bài hát</h1>
     <p class="mt-2 text-sm text-slate-400">Xem danh sách bài chờ, nghe thử, duyệt, từ chối hoặc ẩn bài hát.</p>
 
-    <div class="mt-6 grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_220px_220px_auto]">
+    <div class="mt-6 grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_220px_auto]">
       <div class="relative">
         <i class='bx bx-search absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400'></i>
         <input type="text" [ngModel]="search" (ngModelChange)="searchChange.emit($event)" placeholder="Tìm theo tên bài hát hoặc nghệ sĩ" class="h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 pl-11 text-sm text-slate-100 outline-none transition focus:border-emerald-400" />
@@ -16,12 +16,6 @@
         <option value="Approved">Đã duyệt</option>
         <option value="Rejected">Từ chối</option>
         <option value="Hidden">Đã ẩn</option>
-      </select>
-
-      <select [ngModel]="sourceFilter" (ngModelChange)="sourceFilterChange.emit($event)" class="h-12 rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-slate-100 outline-none transition focus:border-emerald-400">
-        <option value="ALL">Tất cả nguồn</option>
-        <option value="LOCAL">Địa phương</option>
-        <option value="ITUNES">iTunes</option>
       </select>
 
       <button type="button" (click)="refresh.emit()" class="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white/5 px-5 text-sm font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10">
@@ -39,7 +33,6 @@
             <th class="px-4 py-4 font-medium">Ảnh bìa</th>
             <th class="px-4 py-4 font-medium">Bài hát</th>
             <th class="px-4 py-4 font-medium">Nghệ sĩ</th>
-            <th class="px-4 py-4 font-medium">Nguồn</th>
             <th class="px-4 py-4 font-medium">Thời lượng</th>
             <th class="px-4 py-4 font-medium">Ngày tạo</th>
             <th class="px-4 py-4 font-medium">Trạng thái</th>
@@ -52,10 +45,9 @@
             <td class="px-4 py-4"><img [src]="song.thumbnail" [alt]="song.title" class="h-14 w-14 rounded-2xl object-cover" /></td>
             <td class="px-4 py-4">
               <p class="font-semibold text-white">{{ song.title }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ song.id }} • {{ song.album }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ song.album }}</p>
             </td>
             <td class="px-4 py-4">{{ song.artist }}</td>
-            <td class="px-4 py-4 font-medium" [ngClass]="getSongSourceClass(song.source)">{{ getSongSourceLabel(song.source) }}</td>
             <td class="px-4 py-4">{{ song.duration }}</td>
             <td class="px-4 py-4">{{ song.createdAt }}</td>
             <td class="px-4 py-4 font-medium" [ngClass]="getSongStatusClass(song.status)">{{ getSongStatusLabel(song.status) }}</td>
@@ -90,7 +82,7 @@
           </tr>
 
           <tr *ngIf="songs.length === 0">
-            <td colspan="8" class="px-6 py-16 text-center text-slate-500">
+            <td colspan="7" class="px-6 py-16 text-center text-slate-500">
               <i class='bx bx-music text-5xl'></i>
               <p class="mt-3 text-sm">Không có bài hát phù hợp</p>
             </td>

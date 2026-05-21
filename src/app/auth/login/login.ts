@@ -65,7 +65,7 @@ export class Login implements OnInit {
         this.isLoading = false;
         this.cdr.detectChanges();
         this.router.navigate([
-          user.role === 'ADMIN' ? '/admin' : user.role === 'ARTIST' ? '/artist' : '/'
+          user.role === 'ADMIN' ? '/admin' : '/'
         ]);
       },
       error: (err) => {

@@ -42,6 +42,7 @@ export class SongDetail implements OnInit, OnDestroy {
   private sub: Subscription | null = null;
   private isPlayingSub: Subscription | null = null;
   private currentSongSub: Subscription | null = null;
+  private songsSub: Subscription | null = null;
 
   ngOnInit() {
     this.sub = this.route.paramMap.subscribe(params => {
@@ -57,6 +58,16 @@ export class SongDetail implements OnInit, OnDestroy {
 
     this.isPlayingSub = this.playerService.isPlaying$.subscribe(() => {
       this.checkPlayingState();
+    });
+
+    this.songsSub = this.libraryService.songs$.subscribe(songs => {
+      if (this.song && this.songId) {
+        const updatedSong = songs.find(s => String(s.id) === String(this.songId));
+        if (updatedSong) {
+          this.song.plays = this.musicService.getListenCount(updatedSong.id, updatedSong.listenCount);
+          this.cdr.detectChanges();
+        }
+      }
     });
 
     this.loadUserPlaylists();
@@ -75,6 +86,7 @@ export class SongDetail implements OnInit, OnDestroy {
     if (this.sub) this.sub.unsubscribe();
     if (this.currentSongSub) this.currentSongSub.unsubscribe();
     if (this.isPlayingSub) this.isPlayingSub.unsubscribe();
+    if (this.songsSub) this.songsSub.unsubscribe();
     if (this.clickListener) {
       window.removeEventListener('click', this.clickListener);
     }
@@ -111,14 +123,28 @@ export class SongDetail implements OnInit, OnDestroy {
   }
 
   fetchArtistSongs(artist: string) {
-    this.musicService.searchItunesSongs(artist, 6).subscribe({
-      next: list => {
-        // Loại bỏ bài hát hiện tại khỏi danh sách gợi ý nghệ sĩ
-        this.artistSongs = list.filter(s => String(s.id) !== String(this.songId) && String(s.id).replace('itunes-', '') !== String(this.songId).replace('itunes-', ''));
-        this.cdr.detectChanges();
-      },
-      error: err => console.error(err)
-    });
+    // Lấy bài hát cùng nghệ sĩ từ database nội bộ (chỉ bài đã duyệt, loại trừ bài hiện tại)
+    const allSongs = this.libraryService.snapshot.songs;
+    const normalizedArtist = artist.trim().toLowerCase();
+    const localArtistSongs = allSongs
+      .filter(s =>
+        s.status === 'APPROVED' &&
+        s.artistName.trim().toLowerCase() === normalizedArtist &&
+        String(s.id) !== String(this.songId)
+      )
+      .slice(0, 6)
+      .map(s => ({
+        id: s.id,
+        title: s.title,
+        artist: s.artistName,
+        coverUrl: s.thumbnailUrl,
+        previewUrl: s.fileUrl || s.previewUrl || '',
+        duration: s.duration,
+        plays: '0',
+      } as Song));
+
+    this.artistSongs = localArtistSongs;
+    this.cdr.detectChanges();
   }
 
   checkPlayingState() {
@@ -174,9 +200,11 @@ export class SongDetail implements OnInit, OnDestroy {
   playRecommended(song: Song) {
     this.playerService.playSong(song, [song, ...this.artistSongs]);
     
-    // Chuẩn hóa ID bài hát iTunes trước khi điều hướng
+    // Chuẩn hóa ID bài hát trước khi điều hướng
     let targetId = String(song.id);
-    if (!targetId.startsWith('s') && !targetId.startsWith('itunes-')) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    // Chỉ thêm prefix itunes- cho ID dạng số thuần (từ iTunes API), không thêm cho UUID hoặc local ID
+    if (!targetId.startsWith('s') && !targetId.startsWith('itunes-') && !uuidRegex.test(targetId)) {
       targetId = `itunes-${targetId}`;
     }
     

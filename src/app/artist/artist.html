@@ -1,70 +1,54 @@
-<section class="min-h-[calc(100vh-80px)] bg-[#070b14] text-slate-100">
-  <div class="grid min-h-[calc(100vh-80px)] grid-cols-1 xl:grid-cols-[240px_minmax(0,1fr)]">
-    <aside class="border-r border-white/10 bg-slate-950/65 px-4 py-6 sm:px-5 xl:px-4">
-      <div class="space-y-2">
-        <button
-          *ngFor="let item of sidebarItems"
-          type="button"
-          (click)="setActiveTab(item.key)"
-          class="group flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition"
-          [ngClass]="activeTab === item.key
-            ? 'bg-emerald-500/12 text-white ring-1 ring-inset ring-emerald-500/30'
-            : 'text-slate-400 hover:bg-white/5 hover:text-white'"
-        >
-          <span
-            class="flex h-11 w-11 items-center justify-center rounded-xl text-xl transition"
-            [ngClass]="activeTab === item.key
-              ? 'bg-emerald-500/15 text-emerald-300'
-              : 'bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-white'"
-          >
-            <i [class]="item.icon"></i>
-          </span>
-
-          <span class="flex-1">
-            <span class="block text-sm font-semibold">{{ item.label }}</span>
-          </span>
-
-          <span
-            class="h-8 w-1 rounded-full bg-emerald-400 transition"
-            [ngClass]="activeTab === item.key ? 'opacity-100' : 'opacity-0'"
-          ></span>
-        </button>
+<section class="h-full w-full flex flex-col bg-[#0d0d12] text-slate-100 overflow-hidden">
+  <!-- Top Navigation Tab Bar for Artist Dashboard -->
+  <div class="border-b border-white/10 bg-slate-950/40 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+    <div class="flex items-center space-x-3">
+      <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 text-2xl">
+        <i class="bx bxs-user-detail"></i>
+      </span>
+      <div>
+        <h2 class="text-base font-bold text-white tracking-tight leading-tight">Dashboard Nghệ Sĩ</h2>
+        <p class="text-xs text-slate-400 font-semibold mt-0.5">Nghệ sĩ: <span class="text-emerald-400">{{ stageName }}</span></p>
       </div>
-    </aside>
+    </div>
+  </div>
 
-    <main class="px-4 py-6 sm:px-6 xl:px-8">
-      <app-artist-tracking
-        *ngIf="activeTab === 'tracking'"
-        [songs]="trackingSongs"
-        [search]="trackingSearch"
-        (searchChange)="trackingSearch = $event"
-        (refresh)="refreshTracking()"
-        (openDrawer)="openSongDrawer($event)"
-      ></app-artist-tracking>
+  <!-- Artist Content Scroll Container -->
+  <div class="flex-1 min-w-0 overflow-y-auto scrollbar-hide">
+    <!-- Main Content Area -->
+    <main class="px-4 py-6 sm:px-6 xl:px-8 min-h-[calc(100vh-280px)] flex flex-col justify-between">
+      <div class="flex-1 pb-8">
+        <app-artist-management
+          class="block"
+          [mode]="managementMode"
+          [songs]="managementSongs"
+          [search]="managementSearch"
+          [statusFilter]="managementStatusFilter"
+          [songForm]="songForm"
+          [genreOptions]="genreOptions"
+          [rejectedReason]="editingRejectReason"
+          (searchChange)="managementSearch = $event"
+          (statusFilterChange)="managementStatusFilter = $event"
+          (refresh)="refreshManagement()"
+          (openUpload)="openUploadForm()"
+          (openEdit)="openEditForm($event)"
+          (openDelete)="openDeleteModal($event)"
+          (audioFileSelected)="onAudioFileSelected($event)"
+          (thumbnailFileSelected)="onThumbnailFileSelected($event)"
+          (audioFileRemoved)="onAudioFileRemoved()"
+          (thumbnailFileRemoved)="onThumbnailFileRemoved()"
+          (cancelForm)="cancelSongForm()"
+          (submitForm)="submitSongForm()"
+        ></app-artist-management>
+      </div>
 
-      <app-artist-management
-        *ngIf="activeTab === 'management'"
-        [mode]="managementMode"
-        [songs]="managementSongs"
-        [search]="managementSearch"
-        [statusFilter]="managementStatusFilter"
-        [songForm]="songForm"
-        [genreOptions]="genreOptions"
-        [rejectedReason]="editingRejectReason"
-        (searchChange)="managementSearch = $event"
-        (statusFilterChange)="managementStatusFilter = $event"
-        (refresh)="refreshManagement()"
-        (openUpload)="openUploadForm()"
-        (openEdit)="openEditForm($event)"
-        (openDelete)="openDeleteModal($event)"
-        (audioFileSelected)="onAudioFileSelected($event)"
-        (thumbnailFileSelected)="onThumbnailFileSelected($event)"
-        (cancelForm)="cancelSongForm()"
-        (submitForm)="submitSongForm()"
-      ></app-artist-management>
+      <!-- Global Footer -->
+      <div class="shrink-0 pt-6">
+        <app-footer></app-footer>
+      </div>
     </main>
   </div>
 
+  <!-- Drawers & Modals -->
   <app-artist-drawer
     [isOpen]="isDrawerOpen"
     [drawerType]="drawerType"

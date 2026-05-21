@@ -54,11 +54,16 @@ export class Header implements OnInit {
     this.authService.logout();
   }
 
-  isArtistContext(): boolean {
-    const currentUser = this.musicLibraryService.snapshot.users.find(
-      user => user.id === this.musicLibraryService.currentUserId
-    );
+  isArtist(): boolean {
+    return this.authService.currentUserValue?.role === 'ARTIST';
+  }
 
-    return currentUser?.role === 'ARTIST' || this.router.url.startsWith('/artist');
+  isAdmin(): boolean {
+    return this.authService.currentUserValue?.role === 'ADMIN';
+  }
+
+  isArtistContext(): boolean {
+    const user = this.authService.currentUserValue;
+    return user?.role === 'ARTIST' || this.router.url.startsWith('/artist');
   }
 }

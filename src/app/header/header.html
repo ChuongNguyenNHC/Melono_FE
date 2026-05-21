@@ -34,21 +34,47 @@
   </div>
 
   <div class="flex items-center gap-4">
+    <ng-container *ngIf="currentUser$ | async as user">
+      <!-- Admin Management Link -->
+      <a
+        *ngIf="isAdmin()"
+        routerLink="/admin"
+        class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold text-emerald-300 transition-all hover:bg-emerald-500 hover:text-slate-950"
+      >
+        <i class='bx bx-shield-quarter text-xl'></i>
+        <span>Trang quản lý Admin</span>
+      </a>
+
+      <!-- Artist Dashboard Link -->
+      <a
+        *ngIf="isArtist()"
+        routerLink="/artist"
+        class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold text-emerald-300 transition-all hover:bg-emerald-500 hover:text-slate-950"
+      >
+        <i class='bx bx-upload text-xl'></i>
+        <span>Upload nhạc</span>
+      </a>
+
+      <!-- Standard User Register Artist Link -->
+      <a
+        *ngIf="!isAdmin() && !isArtist()"
+        routerLink="/artist-request"
+        class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold text-gray-300 transition-all hover:bg-white hover:text-black"
+      >
+        <i class='bx bx-microphone text-xl'></i>
+        <span>Đăng ký nghệ sĩ</span>
+      </a>
+    </ng-container>
+
+    <!-- Guest Register Artist Link -->
     <a
-      *ngIf="isArtistContext(); else artistRegisterLink"
-      routerLink="/artist"
-      class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold text-emerald-300 transition-all hover:bg-emerald-500 hover:text-slate-950"
+      *ngIf="!(currentUser$ | async)"
+      routerLink="/artist-request"
+      class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold text-gray-300 transition-all hover:bg-white hover:text-black"
     >
       <i class='bx bx-microphone text-xl'></i>
-      <span>Trang qu&#7843;n l&yacute; ngh&#7879; s&#297;</span>
+      <span>Đăng ký nghệ sĩ</span>
     </a>
-
-    <ng-template #artistRegisterLink>
-      <a routerLink="/artist-request" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold text-gray-300 transition-all hover:bg-white hover:text-black">
-        <i class='bx bx-upload text-xl'></i>
-        <span>&#272;&#259;ng k&yacute; ngh&#7879; s&#297;</span>
-      </a>
-    </ng-template>
 
     <ng-container *ngIf="currentUser$ | async as user; else loginTemplate">
       <div class="group relative ml-2 font-sans">

@@ -15,6 +15,7 @@ export interface Song {
   releaseDate?: string;
   copyright?: string;
   itunesId?: string;
+  source?: string;
 }
 
 export interface ItunesPlaylist {
@@ -48,8 +49,10 @@ export class MusicService {
           coverUrl: local.thumbnailUrl,
           previewUrl: local.fileUrl || local.previewUrl || '',
           duration: local.duration,
-          plays: 'Local',
-          genre: local.genreIds && local.genreIds.length > 0 ? 'Local Pop' : 'General'
+          plays: this.getListenCount(local.id),
+          genre: this.resolveGenreNames(local.genreIds),
+          releaseDate: local.createdAt,
+          source: 'LOCAL'
         });
       }
     }
@@ -61,17 +64,19 @@ export class MusicService {
         map(song => {
           if (song) {
             const isItunes = song.source === 'ITUNES' || song.itunesId != null;
+            const genreNames = this.resolveGenreNames(song.genreIds || []);
             return {
               id: song.songId,
               title: song.title,
               artist: song.artistName,
               coverUrl: song.thumbnailUrl || '',
               previewUrl: song.previewUrl || song.fileUrl || '',
-              duration: isItunes ? '0:30' : this.formatDuration(song.duration * 1000),
-              plays: 'DB',
-              genre: 'Local',
+              duration: isItunes ? '0:30' : (song.duration || '0:00'),
+              plays: this.getListenCount(song.songId, song.listenCount),
+              genre: genreNames,
               releaseDate: song.createdAt,
-              itunesId: song.itunesId
+              itunesId: song.itunesId,
+              source: song.source || 'LOCAL'
             };
           }
           return null;
@@ -115,7 +120,8 @@ export class MusicService {
           coverUrl: song.thumbnailUrl,
           previewUrl: song.fileUrl || song.previewUrl || '',
           duration: song.duration,
-          plays: 'Local',
+          plays: this.getListenCount(song.id, song.listenCount),
+          source: 'LOCAL',
         }));
 
         return [...localSongs, ...itunesSongs].slice(0, limit);
@@ -201,5 +207,25 @@ export class MusicService {
     const minutes = Math.floor(ms / 60000);
     const seconds = ((ms % 60000) / 1000).toFixed(0);
     return minutes + ":" + (parseInt(seconds) < 10 ? '0' : '') + seconds;
+  }
+
+  private resolveGenreNames(genreIds: string[]): string {
+    if (!genreIds || genreIds.length === 0) return 'Chưa phân loại';
+    const allGenres = this.musicLibraryService.snapshot.genres;
+    const names = genreIds
+      .map(id => allGenres.find(g => g.id === id)?.name)
+      .filter(Boolean);
+    return names.length > 0 ? names.join(', ') : 'Chưa phân loại';
+  }
+
+  public getListenCount(songId: string, backendCount?: number): string {
+    const count = (backendCount !== undefined && backendCount !== null)
+      ? backendCount
+      : this.musicLibraryService.snapshot.listenHistory.filter(h => h.songId === songId).length;
+
+    if (count === 0) return '0';
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return String(count);
   }
 }

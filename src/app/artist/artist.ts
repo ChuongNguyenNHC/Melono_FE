@@ -1,40 +1,49 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { MusicGenre, MusicSong, SongStatus as DomainSongStatus } from '../models/music-domain.models';
 import { MusicLibraryService } from '../services/music-library.service';
 import { ArtistDrawer } from './artist-drawer/artist-drawer';
 import { ArtistManagement } from './artist-management/artist-management';
 import { ArtistModal } from './artist-modal/artist-modal';
-import { ArtistTracking } from './artist-tracking/artist-tracking';
 import {
   ArtistDrawerType,
   ArtistModalType,
   ArtistSongItem,
-  ArtistTab,
   ArtistViewMode,
   SongFormData,
-  SongSource,
   SongStatus,
 } from './artist.models';
+import { Footer } from '../footer/footer';
+
+import { UploadService } from '../services/upload.service';
+import { AuthService } from '../services/auth.service';
+import Swal from 'sweetalert2';
+import { forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-artist',
   standalone: true,
-  imports: [CommonModule, ArtistTracking, ArtistManagement, ArtistDrawer, ArtistModal],
+  imports: [CommonModule, ArtistManagement, ArtistDrawer, ArtistModal, Footer],
   templateUrl: './artist.html',
+  host: {
+    class: 'block h-full w-full'
+  }
 })
 export class Artist {
   private readonly libraryService = inject(MusicLibraryService);
+  private readonly uploadService = inject(UploadService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  activeTab: ArtistTab = 'tracking';
+  selectedAudioFile: File | null = null;
+  selectedThumbnailFile: File | null = null;
+
   managementMode: ArtistViewMode = 'list';
 
   stageName = this.resolveStageName();
-
-  trackingSearch = '';
-  trackingStatusFilter: SongStatus | 'ALL' = 'ALL';
-  trackingSourceFilter: SongSource | 'ALL' = 'ALL';
 
   managementSearch = '';
   managementStatusFilter: SongStatus | 'ALL' = 'ALL';
@@ -47,11 +56,6 @@ export class Artist {
 
   selectedSong: ArtistSongItem | null = null;
   songPendingDelete: ArtistSongItem | null = null;
-
-  readonly sidebarItems = [
-    { key: 'tracking', label: 'Theo dõi nhạc', icon: 'bx bx-music' },
-    { key: 'management', label: 'Quản lý nhạc', icon: 'bx bx-upload' },
-  ] as const;
 
   songForm: SongFormData = this.createEmptyForm();
   editingSongId: string | null = null;
@@ -72,36 +76,26 @@ export class Artist {
     // Kept for template compatibility; song data now lives in MusicLibraryService.
   }
 
-  setActiveTab(tab: ArtistTab): void {
-    this.activeTab = tab;
-    this.closeDrawer();
-    this.closeModal();
-
-    if (tab === 'tracking') {
-      this.managementMode = 'list';
-    }
-
-    if (tab === 'management' && this.managementMode !== 'upload' && this.managementMode !== 'edit') {
-      this.managementMode = 'list';
-    }
-  }
-
   openUploadForm(): void {
-    this.activeTab = 'management';
+    this.stageName = this.resolveStageName();
     this.managementMode = 'upload';
     this.editingSongId = null;
+    this.selectedAudioFile = null;
+    this.selectedThumbnailFile = null;
     this.songForm = this.createEmptyForm();
     this.closeDrawer();
     this.closeModal();
   }
 
   openEditForm(song: ArtistSongItem): void {
-    this.activeTab = 'management';
+    this.stageName = this.resolveStageName();
     this.managementMode = 'edit';
     this.editingSongId = song.id;
+    this.selectedAudioFile = null;
+    this.selectedThumbnailFile = null;
     this.songForm = {
       title: song.title,
-      genre: song.genre,
+      genres: song.genre.split(',').map(s => s.trim()).filter(Boolean),
       stageName: this.stageName,
       description: song.description,
       duration: song.duration,
@@ -117,6 +111,7 @@ export class Artist {
     const file = input.files?.[0];
     if (!file) return;
 
+    this.selectedAudioFile = file;
     this.songForm.audioFileName = file.name;
 
     const objectUrl = URL.createObjectURL(file);
@@ -124,12 +119,13 @@ export class Artist {
 
     audio.onloadedmetadata = () => {
       this.songForm.duration = this.formatDuration(audio.duration);
-      URL.revokeObjectURL(objectUrl);
     };
 
-    this.readFileAsDataUrl(file, value => {
-      this.songForm.audioFileUrl = value;
-    });
+    // Dùng objectUrl làm local preview nhẹ nhàng thay vì base64 DataURL
+    this.songForm.audioFileUrl = objectUrl;
+
+    // Reset input value to allow selecting the same file again if removed
+    input.value = '';
   }
 
   onThumbnailFileSelected(event: Event): void {
@@ -137,57 +133,155 @@ export class Artist {
     const file = input.files?.[0];
     if (!file) return;
 
-    this.readFileAsDataUrl(file, value => {
-      this.songForm.thumbnailUrl = value;
-    });
+    this.selectedThumbnailFile = file;
+    
+    // Tạo objectUrl làm preview hình ảnh
+    this.songForm.thumbnailUrl = URL.createObjectURL(file);
+
+    // Reset input value to allow selecting the same file again if removed
+    input.value = '';
+  }
+
+  onAudioFileRemoved(): void {
+    this.selectedAudioFile = null;
+    this.songForm.audioFileName = '';
+    this.songForm.audioFileUrl = '';
+    this.songForm.duration = '';
+  }
+
+  onThumbnailFileRemoved(): void {
+    this.selectedThumbnailFile = null;
+    this.songForm.thumbnailUrl = '';
   }
 
   cancelSongForm(): void {
     this.managementMode = 'list';
     this.editingSongId = null;
+    this.selectedAudioFile = null;
+    this.selectedThumbnailFile = null;
     this.songForm = this.createEmptyForm();
   }
 
   submitSongForm(): void {
     const title = this.songForm.title.trim();
-    const genre = this.songForm.genre.trim();
+    const genres = this.songForm.genres || [];
     const description = this.songForm.description.trim();
 
-    if (!title || !genre || !description) return;
-
-    const genreId = this.findGenreIdByName(genre);
-    if (!genreId) return;
-
-    const payload = {
-      ownerUserId: this.libraryService.currentUserId,
-      title,
-      artistName: this.songForm.stageName.trim() || this.stageName,
-      genreIds: [genreId],
-      duration: this.songForm.duration.trim() || '--:--',
-      description,
-      thumbnailUrl:
-        this.songForm.thumbnailUrl.trim() ||
-        'https://via.placeholder.com/300x300?text=Melono',
-      fileUrl: this.songForm.audioFileUrl || 'assets/audio/demo-song.mp3',
-    };
-
-    if (this.managementMode === 'upload') {
-      this.libraryService.createLocalSong(payload);
-      this.songForm = this.createEmptyForm();
-      this.managementMode = 'list';
+    if (!title || genres.length === 0 || !description) {
+      Swal.fire({
+        title: 'Lỗi nhập liệu!',
+        text: 'Vui lòng nhập đầy đủ tiêu đề, chọn ít nhất một thể loại và mô tả.',
+        icon: 'error',
+        background: '#1c1c28',
+        color: '#ffffff',
+        confirmButtonColor: '#1ed760'
+      });
       return;
     }
 
-    if (this.managementMode === 'edit' && this.editingSongId) {
-      this.libraryService.updateArtistSong(
-        this.editingSongId,
-        this.libraryService.currentUserId,
-        payload
-      );
-      this.songForm = this.createEmptyForm();
-      this.editingSongId = null;
-      this.managementMode = 'list';
+    const genreIds = genres.map(name => this.findGenreIdByName(name)).filter(Boolean) as string[];
+    if (genreIds.length === 0) return;
+
+    // Nếu là đăng bài hát mới, bắt buộc phải chọn file nhạc và file ảnh đại diện
+    if (this.managementMode === 'upload' && (!this.selectedAudioFile || !this.selectedThumbnailFile)) {
+      Swal.fire({
+        title: 'Thiếu tệp tin!',
+        text: 'Vui lòng chọn đầy đủ cả tệp nhạc (.mp3) và ảnh đại diện (.jpg/.png).',
+        icon: 'warning',
+        background: '#1c1c28',
+        color: '#ffffff',
+        confirmButtonColor: '#1ed760'
+      });
+      return;
     }
+
+    // Hiển thị trạng thái đang xử lý tải lên MinIO
+    Swal.fire({
+      title: 'Đang lưu bài hát...',
+      html: `
+        <div class="flex flex-col items-center justify-center p-4">
+          <div class="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500/20 border-t-emerald-400 mb-4"></div>
+          <p class="text-sm text-slate-300 text-center">Hệ thống đang tải các tệp tin lên bộ lưu trữ MinIO và xử lý dữ liệu. Vui lòng không đóng trang web này.</p>
+        </div>
+      `,
+      allowOutsideClick: false,
+      background: '#1c1c28',
+      color: '#ffffff',
+      showConfirmButton: false
+    });
+
+    // Tạo các observables upload, trả về URL cũ nếu không chọn file mới (khi Edit)
+    const audioUpload$ = this.selectedAudioFile 
+      ? this.uploadService.uploadAudio(this.selectedAudioFile)
+      : of({ url: this.songForm.audioFileUrl });
+
+    const thumbnailUpload$ = this.selectedThumbnailFile
+      ? this.uploadService.uploadImage(this.selectedThumbnailFile)
+      : of({ url: this.songForm.thumbnailUrl });
+
+    forkJoin({
+      audio: audioUpload$,
+      thumbnail: thumbnailUpload$
+    }).subscribe({
+      next: (res) => {
+        const payload = {
+          ownerUserId: this.libraryService.currentUserId,
+          title,
+          artistName: this.songForm.stageName.trim() || this.stageName,
+          genreIds,
+          duration: this.songForm.duration.trim() || '--:--',
+          description,
+          thumbnailUrl: res.thumbnail.url || 'https://via.placeholder.com/300x300?text=Melono',
+          fileUrl: res.audio.url || 'assets/audio/demo-song.mp3',
+        };
+
+        if (this.managementMode === 'upload') {
+          this.libraryService.createLocalSong(payload);
+          Swal.update({
+            icon: 'success',
+            title: 'Thành công!',
+            html: 'Bài hát mới đã được tải lên và gửi quản trị viên phê duyệt thành công!',
+            showConfirmButton: false,
+          });
+          setTimeout(() => {
+            Swal.close();
+            this.managementMode = 'list';
+            this.cdr.detectChanges();
+          }, 2000);
+        } else if (this.managementMode === 'edit' && this.editingSongId) {
+          this.libraryService.updateArtistSong(
+            this.editingSongId,
+            this.libraryService.currentUserId,
+            payload
+          );
+          Swal.update({
+            icon: 'success',
+            title: 'Thành công!',
+            html: 'Cập nhật thông tin bài hát thành công!',
+            showConfirmButton: false,
+          });
+          setTimeout(() => {
+            Swal.close();
+            this.managementMode = 'list';
+            this.cdr.detectChanges();
+          }, 2000);
+        }
+
+        this.selectedAudioFile = null;
+        this.selectedThumbnailFile = null;
+        this.songForm = this.createEmptyForm();
+        this.editingSongId = null;
+      },
+      error: (err) => {
+        Swal.update({
+          icon: 'error',
+          title: 'Lỗi tải lên!',
+          html: err.error?.message || 'Có lỗi xảy ra trong quá trình tải tệp tin lên MinIO. Vui lòng thử lại.',
+          showConfirmButton: true,
+          confirmButtonColor: '#1ed760'
+        });
+      }
+    });
   }
 
   openSongDrawer(song: ArtistSongItem): void {
@@ -226,12 +320,6 @@ export class Artist {
     this.closeModal();
   }
 
-  refreshTracking(): void {
-    this.trackingSearch = '';
-    this.trackingStatusFilter = 'ALL';
-    this.trackingSourceFilter = 'ALL';
-  }
-
   refreshManagement(): void {
     this.managementSearch = '';
     this.managementStatusFilter = 'ALL';
@@ -246,26 +334,6 @@ export class Artist {
     if (editingSong?.status !== 'Rejected') return '';
 
     return editingSong.rejectReason || 'Vui lòng chỉnh sửa lại thông tin bài hát trước khi gửi lại.';
-  }
-
-  get trackingSongs(): ArtistSongItem[] {
-    const keyword = this.trackingSearch.trim().toLowerCase();
-
-    return this.songs.filter(song => {
-      if (song.status !== 'Approved') return false;
-
-      const matchedKeyword =
-        !keyword ||
-        [song.title, song.genre, song.id]
-          .join(' ')
-          .toLowerCase()
-          .includes(keyword);
-
-      const matchedSource =
-        this.trackingSourceFilter === 'ALL' || song.source === this.trackingSourceFilter;
-
-      return matchedKeyword && matchedSource;
-    });
   }
 
   get managementSongs(): ArtistSongItem[] {
@@ -286,64 +354,11 @@ export class Artist {
     });
   }
 
-  getSongStatusLabel(status: SongStatus): string {
-    switch (status) {
-      case 'Pending':
-        return 'Chờ duyệt';
-      case 'Approved':
-        return 'Đã duyệt';
-      case 'Rejected':
-        return 'Từ chối';
-      case 'Hidden':
-        return 'Đã ẩn';
-      default:
-        return status;
-    }
-  }
-
-  getSongStatusClass(status: SongStatus): string {
-    switch (status) {
-      case 'Pending':
-        return 'text-amber-300';
-      case 'Approved':
-        return 'text-emerald-300';
-      case 'Rejected':
-        return 'text-rose-300';
-      case 'Hidden':
-        return 'text-slate-300';
-      default:
-        return 'text-white';
-    }
-  }
-
-  getSongSourceLabel(source: SongSource): string {
-    switch (source) {
-      case 'LOCAL':
-        return 'Địa phương';
-      case 'ITUNES':
-        return 'iTunes';
-      default:
-        return source;
-    }
-  }
-
-  getTrackingNote(song: ArtistSongItem): string {
-    if (song.status === 'Pending') return 'Đang chờ quản trị viên kiểm duyệt';
-    if (song.status === 'Approved') return 'Bài hát đã được phát hành';
-    if (song.status === 'Hidden') return 'Bài hát đang bị ẩn khỏi người dùng';
-
-    return song.rejectReason || song.note;
-  }
-
-  trackById(_index: number, item: { id: string }): string {
-    return item.id;
-  }
-
   private createEmptyForm(): SongFormData {
     return {
       title: '',
-      genre: '',
-      stageName: this.stageName,
+      genres: [],
+      stageName: this.resolveStageName(),
       description: '',
       duration: '',
       audioFileName: '',
@@ -353,7 +368,8 @@ export class Artist {
   }
 
   private toArtistSongItem(song: MusicSong, genres: MusicGenre[]): ArtistSongItem {
-    const genre = genres.find(item => item.id === song.genreIds[0])?.name || 'Chưa phân loại';
+    const songGenres = song.genreIds ? song.genreIds.map(id => genres.find(item => item.id === id)?.name).filter(Boolean) as string[] : [];
+    const genre = songGenres.length > 0 ? songGenres.join(', ') : 'Chưa phân loại';
 
     return {
       id: song.id,
@@ -395,6 +411,14 @@ export class Artist {
   }
 
   private resolveStageName(): string {
+    const currentUser = this.authService.currentUserValue;
+    if (currentUser) {
+      if (currentUser.role === 'ARTIST' && currentUser.stageName) {
+        return currentUser.stageName;
+      }
+      return currentUser.name || currentUser.username;
+    }
+
     const userId = this.libraryService.currentUserId;
     const approvedRequest = this.libraryService.snapshot.artistRequests.find(
       request => request.userId === userId && request.status === 'APPROVED'
