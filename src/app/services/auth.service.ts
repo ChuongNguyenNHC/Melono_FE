@@ -10,6 +10,7 @@ export interface User {
   username: string;
   role: 'USER' | 'ARTIST' | 'ADMIN';
   avatarUrl: string;
+  stageName?: string;
 }
 
 @Injectable({
@@ -48,6 +49,7 @@ export class AuthService {
           email: backendUser.email,
           role: backendUser.role,
           avatarUrl: backendUser.avatarUrl || 'https://ui-avatars.com/api/?name=' + backendUser.username + '&background=1ed760&color=fff',
+          stageName: backendUser.stageName,
         };
         
         localStorage.setItem('mockUser', JSON.stringify(user));
@@ -88,6 +90,7 @@ export class AuthService {
             name: response.stageName || response.username,
             username: response.username,
             avatarUrl: response.avatarUrl || 'https://ui-avatars.com/api/?name=' + response.username + '&background=1ed760&color=fff',
+            stageName: response.stageName,
           };
           localStorage.setItem('mockUser', JSON.stringify(updatedUser));
           this.currentUserSubject.next(updatedUser);

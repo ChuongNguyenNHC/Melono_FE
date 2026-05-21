@@ -21,6 +21,7 @@ export class Profile implements OnInit {
   user: User | null = null;
 
   // Form fields
+  username: string = '';
   stageName: string = '';
   avatarUrl: string = '';
   currentPassword?: string = '';
@@ -40,8 +41,9 @@ export class Profile implements OnInit {
       this.zone.run(() => {
         this.user = u;
         if (u) {
-          this.stageName = u.name;
-          this.avatarUrl = u.avatarUrl;
+          this.username = u.username || '';
+          this.stageName = u.stageName || '';
+          this.avatarUrl = u.avatarUrl || '';
         }
         this.cdr.detectChanges();
       });
@@ -58,8 +60,14 @@ export class Profile implements OnInit {
   updateProfileInfo() {
     if (!this.user) return;
 
-    if (!this.stageName || !this.stageName.trim()) {
+    if (!this.username || !this.username.trim()) {
       this.errorMessage = 'Tên hiển thị không được để trống.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (this.user.role === 'ARTIST' && (!this.stageName || !this.stageName.trim())) {
+      this.errorMessage = 'Nghệ danh (Stage Name) không được để trống.';
       this.cdr.detectChanges();
       return;
     }
@@ -70,13 +78,12 @@ export class Profile implements OnInit {
     this.cdr.detectChanges();
 
     const updateData: any = {
+      username: this.username.trim(),
       avatarUrl: this.avatarUrl.trim() || undefined,
     };
 
     if (this.user.role === 'ARTIST') {
       updateData.stageName = this.stageName.trim();
-    } else {
-      updateData.username = this.stageName.trim();
     }
 
     this.authService.updateProfile(this.user.id, updateData).subscribe({

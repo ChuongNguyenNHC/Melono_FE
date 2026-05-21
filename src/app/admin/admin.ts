@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import Swal from 'sweetalert2';
 
 import { MusicSong } from '../models/music-domain.models';
 import { MusicLibraryService } from '../services/music-library.service';
+import { Footer } from '../footer/footer';
 import { AdminArtists } from './admin-artists/admin-artists';
 import { AdminDrawer } from './admin-drawer/admin-drawer';
 import { AdminGenres } from './admin-genres/admin-genres';
@@ -17,7 +19,6 @@ import {
   ModalType,
   RequestStatus,
   SongItem,
-  SongSource,
   SongStatus,
   UserRecord,
   UserRole,
@@ -27,8 +28,11 @@ import {
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, AdminSongs, AdminUsers, AdminArtists, AdminGenres, AdminDrawer, AdminModal],
+  imports: [CommonModule, AdminSongs, AdminUsers, AdminArtists, AdminGenres, AdminDrawer, AdminModal, Footer],
   templateUrl: './admin.html',
+  host: {
+    class: 'block h-full w-full'
+  }
 })
 export class Admin {
   private readonly musicLibraryService = inject(MusicLibraryService);
@@ -38,7 +42,6 @@ export class Admin {
 
   songSearch = '';
   songStatusFilter: SongStatus | 'ALL' = 'ALL';
-  songSourceFilter: SongSource | 'ALL' = 'ALL';
 
   userSearch = '';
   userRoleFilter: UserRole | 'ALL' = 'ALL';
@@ -61,9 +64,17 @@ export class Admin {
   banReason = '';
   rejectArtistReason = '';
 
-  songs: SongItem[] = this.musicLibraryService.snapshot.songs.map(song => this.toSongItem(song));
+  songs: SongItem[] = [];
   users: UserRecord[] = ADMIN_USERS.map(user => ({ ...user }));
   artistRequests: ArtistRequest[] = ADMIN_ARTIST_REQUESTS.map(request => ({ ...request }));
+
+  constructor() {
+    this.musicLibraryService.songs$.subscribe(songs => {
+      this.songs = songs
+        .filter(song => song.source === 'LOCAL')
+        .map(song => this.toSongItem(song));
+    });
+  }
 
   readonly tabItems = [
     { key: 'songs', label: 'Ki\u1ec3m duy\u1ec7t b\u00e0i h\u00e1t', icon: 'bx bx-music' },
@@ -89,10 +100,7 @@ export class Admin {
       const matchedStatus =
         this.songStatusFilter === 'ALL' || song.status === this.songStatusFilter;
 
-      const matchedSource =
-        this.songSourceFilter === 'ALL' || song.source === this.songSourceFilter;
-
-      return matchedKeyword && matchedStatus && matchedSource;
+      return matchedKeyword && matchedStatus;
     });
   }
 
@@ -135,7 +143,6 @@ export class Admin {
   refreshSongs(): void {
     this.songSearch = '';
     this.songStatusFilter = 'ALL';
-    this.songSourceFilter = 'ALL';
   }
 
   refreshUsers(): void {
@@ -239,33 +246,126 @@ export class Admin {
 
   confirmApproveSong(): void {
     if (!this.selectedSong) return;
-    this.musicLibraryService.approveSong(this.selectedSong.id);
-    this.selectedSong.status = 'Approved';
-    this.syncSongs();
-    this.closeModal();
+    const songTitle = this.selectedSong.title;
+    this.musicLibraryService.approveSong(this.selectedSong.id).subscribe({
+      next: () => {
+        this.syncSongs();
+        this.closeModal();
+        this.closeDrawer();
+        Swal.fire({
+          title: 'Đã duyệt!',
+          text: `Bài hát "${songTitle}" đã được duyệt thành công.`,
+          icon: 'success',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+          timer: 2500,
+          timerProgressBar: true
+        });
+      },
+      error: () => {
+        Swal.fire({
+          title: 'Lỗi!',
+          text: 'Không thể duyệt bài hát. Vui lòng thử lại.',
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760'
+        });
+      }
+    });
   }
 
   confirmRejectSong(): void {
     if (!this.selectedSong) return;
-    this.musicLibraryService.rejectSong(this.selectedSong.id, this.rejectSongReason);
-    this.selectedSong.status = 'Rejected';
-    this.selectedSong.rejectReason = this.rejectSongReason.trim();
-    this.syncSongs();
-    this.closeModal();
+    const songTitle = this.selectedSong.title;
+    this.musicLibraryService.rejectSong(this.selectedSong.id, this.rejectSongReason).subscribe({
+      next: () => {
+        this.syncSongs();
+        this.closeModal();
+        this.closeDrawer();
+        Swal.fire({
+          title: 'Đã từ chối!',
+          text: `Bài hát "${songTitle}" đã bị từ chối.`,
+          icon: 'info',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+          timer: 2500,
+          timerProgressBar: true
+        });
+      },
+      error: () => {
+        Swal.fire({
+          title: 'Lỗi!',
+          text: 'Không thể từ chối bài hát. Vui lòng thử lại.',
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760'
+        });
+      }
+    });
   }
 
   confirmHideSong(): void {
     if (!this.selectedSong) return;
-    this.musicLibraryService.hideSong(this.selectedSong.id);
-    this.selectedSong.status = 'Hidden';
-    this.syncSongs();
-    this.closeModal();
+    const songTitle = this.selectedSong.title;
+    this.musicLibraryService.hideSong(this.selectedSong.id).subscribe({
+      next: () => {
+        this.syncSongs();
+        this.closeModal();
+        this.closeDrawer();
+        Swal.fire({
+          title: 'Đã ẩn!',
+          text: `Bài hát "${songTitle}" đã được ẩn khỏi danh sách công khai.`,
+          icon: 'success',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+          timer: 2500,
+          timerProgressBar: true
+        });
+      },
+      error: () => {
+        Swal.fire({
+          title: 'Lỗi!',
+          text: 'Không thể ẩn bài hát. Vui lòng thử lại.',
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760'
+        });
+      }
+    });
   }
 
   restoreSong(song: SongItem): void {
-    this.musicLibraryService.restoreSong(song.id);
-    song.status = 'Approved';
-    this.syncSongs();
+    this.musicLibraryService.restoreSong(song.id).subscribe({
+      next: () => {
+        this.syncSongs();
+        Swal.fire({
+          title: 'Đã bỏ ẩn!',
+          text: `Bài hát "${song.title}" đã được hiển thị trở lại.`,
+          icon: 'success',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+          timer: 2500,
+          timerProgressBar: true
+        });
+      },
+      error: () => {
+        Swal.fire({
+          title: 'Lỗi!',
+          text: 'Không thể bỏ ẩn bài hát. Vui lòng thử lại.',
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760'
+        });
+      }
+    });
   }
 
   confirmBanUser(): void {
@@ -313,7 +413,9 @@ export class Admin {
   }
 
   private syncSongs(): void {
-    this.songs = this.musicLibraryService.snapshot.songs.map(song => this.toSongItem(song));
+    this.songs = this.musicLibraryService.snapshot.songs
+      .filter(song => song.source === 'LOCAL')
+      .map(song => this.toSongItem(song));
   }
 
   private toSongItem(song: MusicSong): SongItem {

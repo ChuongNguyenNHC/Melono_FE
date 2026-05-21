@@ -1,60 +1,6 @@
 import { ArtistRequest, SongItem, UserRecord } from './admin.models';
 
-export const ADMIN_SONGS: SongItem[] = [
-  {
-    id: 'S001',
-    title: 'Đêm thành phố',
-    album: 'Sau hoàng hôn',
-    artist: 'Dưa lưới',
-    thumbnail:
-      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=300&auto=format&fit=crop',
-    source: 'LOCAL',
-    duration: '04:05',
-    createdAt: '10/04/2026 08:30',
-    status: 'Pending',
-    audioUrl: 'assets/audio/demo-song.mp3',
-  },
-  {
-    id: 'S002',
-    title: 'Giai điệu mơ',
-    album: 'Mùa yêu',
-    artist: 'Khánh Beat',
-    thumbnail:
-      'https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=300&auto=format&fit=crop',
-    source: 'ITUNES',
-    duration: '03:28',
-    createdAt: '09/04/2026 18:10',
-    status: 'Approved',
-    audioUrl: 'assets/audio/demo-song.mp3',
-  },
-  {
-    id: 'S003',
-    title: 'Ly trà xanh',
-    album: 'Tình ca',
-    artist: 'Hồng Nhung',
-    thumbnail:
-      'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=300&auto=format&fit=crop',
-    source: 'LOCAL',
-    duration: '03:45',
-    createdAt: '08/04/2026 12:00',
-    status: 'Rejected',
-    audioUrl: 'assets/audio/demo-song.mp3',
-    rejectReason: 'Chất lượng file audio chưa đạt yêu cầu.',
-  },
-  {
-    id: 'S004',
-    title: 'Phố khuya',
-    album: 'Đêm không ngủ',
-    artist: 'Hoàng Acoustic',
-    thumbnail:
-      'https://images.unsplash.com/photo-1507838153414-b4b713384a76?q=80&w=300&auto=format&fit=crop',
-    source: 'ITUNES',
-    duration: '04:12',
-    createdAt: '07/04/2026 21:15',
-    status: 'Hidden',
-    audioUrl: 'assets/audio/demo-song.mp3',
-  },
-];
+export const ADMIN_SONGS: SongItem[] = [];
 
 export const ADMIN_USERS: UserRecord[] = [
   {

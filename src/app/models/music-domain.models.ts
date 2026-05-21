@@ -34,6 +34,7 @@ export interface MusicSong {
   createdAt: string;
   ownerUserId?: string;
   description?: string;
+  listenCount?: number;
 }
 
 export interface MusicGenre {

@@ -1,4 +1,3 @@
-export type ArtistTab = 'tracking' | 'management';
 export type ArtistViewMode = 'list' | 'upload' | 'edit';
 export type SongStatus = 'Pending' | 'Approved' | 'Rejected' | 'Hidden';
 export type SongSource = 'LOCAL' | 'ITUNES';
@@ -25,7 +24,7 @@ export interface ArtistSongItem {
 
 export interface SongFormData {
   title: string;
-  genre: string;
+  genres: string[];
   stageName: string;
   description: string;
   duration: string;

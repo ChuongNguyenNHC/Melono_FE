@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, map } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, map, tap } from 'rxjs';
 
 import {
   AppUser,
@@ -36,7 +37,48 @@ const now = () => new Date().toISOString();
 
 @Injectable({ providedIn: 'root' })
 export class MusicLibraryService {
+  private http = inject(HttpClient);
+  private apiUrl = 'http://localhost:8080/api/songs';
+
   private readonly stateSubject = new BehaviorSubject<MusicLibraryState>(this.loadInitialState());
+
+  constructor() {
+    this.fetchSongsFromBackend();
+  }
+
+  private fetchSongsFromBackend(): void {
+    this.http.get<any[]>(this.apiUrl).subscribe({
+      next: (songs) => {
+        const mappedSongs: MusicSong[] = songs.map(song => this.mapBackendSongToFE(song));
+        this.patchState(state => ({
+          ...state,
+          songs: mappedSongs
+        }));
+      },
+      error: (err) => console.error('Failed to load songs from backend database', err)
+    });
+  }
+
+  private mapBackendSongToFE(song: any): MusicSong {
+    return {
+      id: song.songId,
+      title: song.title,
+      artistName: song.artistName,
+      source: song.source || 'LOCAL',
+      genreIds: song.genreIds || [],
+      itunesId: song.itunesId || undefined,
+      previewUrl: song.previewUrl || undefined,
+      fileUrl: song.fileUrl || undefined,
+      thumbnailUrl: song.thumbnailUrl || 'https://via.placeholder.com/300x300?text=Melono',
+      duration: song.duration || '--:--',
+      status: song.status || 'PENDING',
+      rejectReason: song.rejectReason || undefined,
+      createdAt: song.createdAt || new Date().toISOString(),
+      ownerUserId: song.ownerUserId || undefined,
+      description: song.description || undefined,
+      listenCount: song.listenCount || 0
+    };
+  }
 
   readonly users$ = this.stateSubject.pipe(map(state => state.users));
   readonly songs$ = this.stateSubject.pipe(map(state => state.songs));
@@ -189,13 +231,36 @@ export class MusicLibraryService {
   }
 
   recordListen(userId: string, songId: string): void {
-    this.patchState(state => ({
-      ...state,
-      listenHistory: [
-        { userId, songId, listenedAt: now() },
-        ...state.listenHistory.filter(item => item.userId !== userId || item.songId !== songId),
-      ].slice(0, 50),
-    }));
+    // 1. Cập nhật cục bộ state để UI phản hồi ngay lập tức và tăng listenCount của song
+    this.patchState(state => {
+      const updatedSongs = state.songs.map(song => {
+        if (song.id === songId) {
+          return {
+            ...song,
+            listenCount: (song.listenCount || 0) + 1
+          };
+        }
+        return song;
+      });
+
+      return {
+        ...state,
+        songs: updatedSongs,
+        listenHistory: [
+          { userId, songId, listenedAt: now() },
+          ...state.listenHistory.filter(item => item.userId !== userId || item.songId !== songId),
+        ].slice(0, 50),
+      };
+    });
+
+    // 2. Gửi request lên backend lưu lượt nghe vĩnh viễn trong MySQL
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(songId)) {
+      this.http.post<void>(`${this.apiUrl}/${songId}/listen?userId=${userId}`, {}).subscribe({
+        next: () => console.log(`Recorded play count on backend for song: ${songId}`),
+        error: (err) => console.error('Failed to record play count on backend database', err)
+      });
+    }
   }
 
   submitArtistRequest(payload: CreateArtistRequestPayload): void {
@@ -241,47 +306,68 @@ export class MusicLibraryService {
   }
 
   createLocalSong(payload: CreateLocalSongPayload): void {
-    this.patchState(state => ({
-      ...state,
-      songs: [
-        {
-          id: this.createId('s', state.songs.length + 1),
-          source: 'LOCAL',
-          status: 'PENDING',
-          createdAt: now(),
-          ...payload,
-        },
-        ...state.songs,
-      ],
-    }));
+    const body = {
+      title: payload.title,
+      artistName: payload.artistName,
+      source: 'LOCAL',
+      genreIds: payload.genreIds,
+      duration: payload.duration,
+      description: payload.description,
+      thumbnailUrl: payload.thumbnailUrl,
+      fileUrl: payload.fileUrl,
+      ownerUserId: payload.ownerUserId,
+      status: 'PENDING'
+    };
+
+    this.http.post<any>(this.apiUrl, body).subscribe({
+      next: (savedSong) => {
+        const mapped = this.mapBackendSongToFE(savedSong);
+        this.patchState(state => ({
+          ...state,
+          songs: [mapped, ...state.songs]
+        }));
+      },
+      error: (err) => console.error('Failed to create local song on backend', err)
+    });
   }
 
   updateArtistSong(songId: string, ownerUserId: string, patch: Partial<CreateLocalSongPayload>): void {
-    this.patchState(state => ({
-      ...state,
-      songs: state.songs.map(song => {
-        if (song.id !== songId || song.ownerUserId !== ownerUserId || song.source !== 'LOCAL') {
-          return song;
-        }
+    const body = {
+      title: patch.title,
+      artistName: patch.artistName,
+      genreIds: patch.genreIds,
+      duration: patch.duration,
+      description: patch.description,
+      thumbnailUrl: patch.thumbnailUrl,
+      fileUrl: patch.fileUrl,
+      ownerUserId: ownerUserId
+    };
 
-        return {
-          ...song,
-          ...patch,
-          status: song.status === 'REJECTED' ? 'PENDING' : song.status,
-          rejectReason: song.status === 'REJECTED' ? '' : song.rejectReason,
-        };
-      }),
-    }));
+    this.http.put<any>(`${this.apiUrl}/${songId}`, body).subscribe({
+      next: (updatedSong) => {
+        const mapped = this.mapBackendSongToFE(updatedSong);
+        this.patchState(state => ({
+          ...state,
+          songs: state.songs.map(song => song.id === songId ? mapped : song)
+        }));
+      },
+      error: (err) => console.error('Failed to update artist song on backend', err)
+    });
   }
 
   deleteArtistSong(songId: string, ownerUserId: string): void {
-    this.patchState(state => ({
-      ...state,
-      songs: state.songs.filter(song => song.id !== songId || song.ownerUserId !== ownerUserId),
-      playlistSongs: state.playlistSongs.filter(item => item.songId !== songId),
-      likedSongs: state.likedSongs.filter(item => item.songId !== songId),
-      listenHistory: state.listenHistory.filter(item => item.songId !== songId),
-    }));
+    this.http.delete<void>(`${this.apiUrl}/${songId}`).subscribe({
+      next: () => {
+        this.patchState(state => ({
+          ...state,
+          songs: state.songs.filter(song => song.id !== songId),
+          playlistSongs: state.playlistSongs.filter(item => item.songId !== songId),
+          likedSongs: state.likedSongs.filter(item => item.songId !== songId),
+          listenHistory: state.listenHistory.filter(item => item.songId !== songId),
+        }));
+      },
+      error: (err) => console.error('Failed to delete artist song on backend', err)
+    });
   }
 
   saveItunesSong(song: {
@@ -300,6 +386,35 @@ export class MusicLibraryService {
       return existingSong.id;
     }
 
+    const payload = {
+      title: song.title,
+      artistName: song.artist,
+      source: 'ITUNES',
+      genreIds: song.genreId ? [song.genreId] : [],
+      itunesId: String(song.id),
+      previewUrl: song.previewUrl,
+      thumbnailUrl: song.coverUrl,
+      duration: song.duration,
+      status: 'APPROVED',
+      description: 'Bài hát được lưu từ iTunes API.',
+    };
+
+    this.http.post<any>(this.apiUrl, payload).subscribe({
+      next: (savedSong) => {
+        const mapped = this.mapBackendSongToFE(savedSong);
+        this.patchState(state => {
+          const exists = state.songs.some(s => s.id === mapped.id);
+          if (exists) return state;
+          return {
+            ...state,
+            songs: [mapped, ...state.songs]
+          };
+        });
+      },
+      error: (err) => console.error('Failed to save iTunes song to backend', err)
+    });
+
+    // Vẫn lưu tạm vào local state đồng bộ để phát nhạc ngay lập tức
     this.patchState(state => ({
       ...state,
       songs: [
@@ -324,20 +439,53 @@ export class MusicLibraryService {
     return songId;
   }
 
-  approveSong(songId: string): void {
-    this.updateSong(songId, { status: 'APPROVED', rejectReason: '' });
+  approveSong(songId: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${songId}/status?status=APPROVED`, {}).pipe(
+      tap((updatedSong) => {
+        const mapped = this.mapBackendSongToFE(updatedSong);
+        this.patchState(state => ({
+          ...state,
+          songs: state.songs.map(song => song.id === songId ? mapped : song)
+        }));
+      })
+    );
   }
 
-  rejectSong(songId: string, reason: string): void {
-    this.updateSong(songId, { status: 'REJECTED', rejectReason: reason.trim() });
+  rejectSong(songId: string, reason: string): Observable<any> {
+    const encodedReason = encodeURIComponent(reason.trim());
+    return this.http.put<any>(`${this.apiUrl}/${songId}/status?status=REJECTED&rejectReason=${encodedReason}`, {}).pipe(
+      tap((updatedSong) => {
+        const mapped = this.mapBackendSongToFE(updatedSong);
+        this.patchState(state => ({
+          ...state,
+          songs: state.songs.map(song => song.id === songId ? mapped : song)
+        }));
+      })
+    );
   }
 
-  hideSong(songId: string): void {
-    this.updateSong(songId, { status: 'HIDDEN' });
+  hideSong(songId: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${songId}/status?status=HIDDEN`, {}).pipe(
+      tap((updatedSong) => {
+        const mapped = this.mapBackendSongToFE(updatedSong);
+        this.patchState(state => ({
+          ...state,
+          songs: state.songs.map(song => song.id === songId ? mapped : song)
+        }));
+      })
+    );
   }
 
-  restoreSong(songId: string): void {
-    this.updateSong(songId, { status: 'APPROVED' });
+  restoreSong(songId: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${songId}/status?status=APPROVED`, {}).pipe(
+      tap((updatedSong) => {
+        const mapped = this.mapBackendSongToFE(updatedSong);
+        this.patchState(state => ({
+          ...state,
+          songs: state.songs.map(song => song.id === songId ? mapped : song)
+        }));
+      })
+    );
   }
 
   banUser(userId: string, reason: string): void {
@@ -457,40 +605,13 @@ export class MusicLibraryService {
   }
 
   private normalizeMockState(state: MusicLibraryState): MusicLibraryState {
-    let songs = state.songs.map(song => {
-      if (song.id === 's001') {
-        return {
-          ...song,
-          description:
-            song.description === 'Bài hát acoustic đang chờ kiểm duyệt.'
-              ? 'Bài hát acoustic với màu sắc thành phố về đêm và nhịp guitar mộc.'
-              : song.description,
-        };
-      }
+    const unwantedSongIds = ['s001', 's002', 's003', 'itunes-6768878796'];
 
-      if (song.id === 's002') {
-        return {
-          ...song,
-          ownerUserId: song.ownerUserId || 'u002',
-          description:
-            song.description === 'Bài hát đã được duyệt để hiển thị cho người dùng.'
-              ? 'Ca khúc pop tươi sáng với phần phối khí trẻ trung và giai điệu dễ nghe.'
-              : song.description,
-        };
-      }
-
-      if (song.id === 's003') {
-        return {
-          ...song,
-          description:
-            song.description === 'Bài hát bị từ chối và cần nghệ sĩ chỉnh sửa.'
-              ? 'Bản ballad nhẹ nhàng kể về những cảm xúc còn vương sau một cuộc gặp.'
-              : song.description,
-        };
-      }
-
-      return song;
-    });
+    // Filter out the unwanted mock songs
+    let songs = (state.songs || []).filter(song => !unwantedSongIds.includes(song.id));
+    const playlistSongs = (state.playlistSongs || []).filter(item => !unwantedSongIds.includes(item.songId));
+    const likedSongs = (state.likedSongs || []).filter(item => !unwantedSongIds.includes(item.songId));
+    const listenHistory = (state.listenHistory || []).filter(item => !unwantedSongIds.includes(item.songId));
 
     const hasArtistApprovedSong = songs.some(
       song => song.ownerUserId === 'u002' && song.status === 'APPROVED'
@@ -517,21 +638,13 @@ export class MusicLibraryService {
       ];
     }
 
-    const likedSongs = [
-      ...state.likedSongs,
-      ...(['u001', 'u003'] as const)
-        .filter(userId => !state.likedSongs.some(item => item.userId === userId && item.songId === 's002'))
-        .map(userId => ({ userId, songId: 's002', createdAt: now() })),
-    ];
-
-    const listenHistory = [
-      ...state.listenHistory,
-      ...(['u001', 'u002', 'u003'] as const)
-        .filter(userId => !state.listenHistory.some(item => item.userId === userId && item.songId === 's002'))
-        .map(userId => ({ userId, songId: 's002', listenedAt: now() })),
-    ];
-
-    const nextState = { ...state, songs, likedSongs, listenHistory };
+    const nextState = {
+      ...state,
+      songs,
+      playlistSongs,
+      likedSongs,
+      listenHistory
+    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
 
     return nextState;
@@ -576,55 +689,7 @@ function createSeedState(): MusicLibraryState {
     { id: 'g004', name: 'Ballad', createdAt: '2026-03-01T08:00:00.000Z', createdBy: 'ADMIN' },
   ];
 
-  const songs: MusicSong[] = [
-    {
-      id: 's001',
-      title: 'Đêm thành phố',
-      artistName: 'Dưa lưới',
-      source: 'LOCAL',
-      genreIds: ['g002'],
-      fileUrl: 'assets/audio/demo-song.mp3',
-      thumbnailUrl:
-        'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=300&auto=format&fit=crop',
-      duration: '04:05',
-      status: 'PENDING',
-      createdAt: '2026-04-10T08:30:00.000Z',
-      ownerUserId: 'u002',
-      description: 'Bài hát acoustic với màu sắc thành phố về đêm và nhịp guitar mộc.',
-    },
-    {
-      id: 's002',
-      title: 'Giai điệu mơ',
-      artistName: 'Khánh Beat',
-      source: 'ITUNES',
-      genreIds: ['g001'],
-      itunesId: '1002',
-      previewUrl: 'assets/audio/demo-song.mp3',
-      ownerUserId: 'u002',
-      thumbnailUrl:
-        'https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=300&auto=format&fit=crop',
-      duration: '0:30',
-      status: 'APPROVED',
-      createdAt: '2026-04-09T18:10:00.000Z',
-      description: 'Ca khúc pop tươi sáng với phần phối khí trẻ trung và giai điệu dễ nghe.',
-    },
-    {
-      id: 's003',
-      title: 'Ly trà xanh',
-      artistName: 'Hồng Nhung',
-      source: 'LOCAL',
-      genreIds: ['g004'],
-      fileUrl: 'assets/audio/demo-song.mp3',
-      thumbnailUrl:
-        'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=300&auto=format&fit=crop',
-      duration: '03:45',
-      status: 'REJECTED',
-      rejectReason: 'Chất lượng file audio chưa đạt yêu cầu.',
-      createdAt: '2026-04-08T12:00:00.000Z',
-      ownerUserId: 'u002',
-      description: 'Bản ballad nhẹ nhàng kể về những cảm xúc còn vương sau một cuộc gặp.',
-    },
-  ];
+  const songs: MusicSong[] = [];
 
   const playlists: MusicPlaylist[] = [
     { id: 'pl001', userId: 'u001', name: 'Nhạc Chilling', status: 'PUBLIC', coverTheme: 0, createdAt: '2026-04-01T08:00:00.000Z' },
@@ -636,19 +701,10 @@ function createSeedState(): MusicLibraryState {
     songs,
     genres,
     playlists,
-    playlistSongs: [
-      { playlistId: 'pl001', songId: 's002', addedAt: '2026-04-04T08:00:00.000Z' },
-    ],
-    likedSongs: [
-      { userId: 'u001', songId: 's002', createdAt: '2026-04-05T08:00:00.000Z' },
-      { userId: 'u003', songId: 's002', createdAt: '2026-04-07T08:00:00.000Z' },
-    ],
+    playlistSongs: [],
+    likedSongs: [],
     playlistFollows: [],
-    listenHistory: [
-      { userId: 'u001', songId: 's002', listenedAt: '2026-04-06T08:00:00.000Z' },
-      { userId: 'u002', songId: 's002', listenedAt: '2026-04-07T08:00:00.000Z' },
-      { userId: 'u003', songId: 's002', listenedAt: '2026-04-08T08:00:00.000Z' },
-    ],
+    listenHistory: [],
     artistRequests: [
       {
         id: 'ar001',

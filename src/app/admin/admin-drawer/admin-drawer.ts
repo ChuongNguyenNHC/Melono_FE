@@ -4,7 +4,6 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import {
   getArtistStatusClass,
   getArtistStatusLabel,
-  getSongSourceLabel,
   getSongStatusClass,
   getSongStatusLabel,
   getUserRoleClass,
@@ -37,7 +36,6 @@ export class AdminDrawer {
   @Output() approveArtist = new EventEmitter<ArtistRequest>();
   @Output() rejectArtist = new EventEmitter<ArtistRequest>();
 
-  readonly getSongSourceLabel = getSongSourceLabel;
   readonly getSongStatusClass = getSongStatusClass;
   readonly getSongStatusLabel = getSongStatusLabel;
   readonly getUserRoleClass = getUserRoleClass;
