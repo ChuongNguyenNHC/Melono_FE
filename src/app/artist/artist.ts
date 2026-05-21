@@ -320,6 +320,77 @@ export class Artist {
     this.closeModal();
   }
 
+  hideSong(song: ArtistSongItem): void {
+    Swal.fire({
+      title: 'Ẩn bài hát?',
+      text: `Bạn có chắc chắn muốn ẩn bài hát "${song.title}" khỏi danh sách công khai không?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#1ed760',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ẩn bài',
+      cancelButtonText: 'Hủy',
+      background: '#1c1c28',
+      color: '#ffffff',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.libraryService.hideSong(song.id).subscribe({
+          next: () => {
+            this.cdr.detectChanges();
+            Swal.fire({
+              title: 'Đã ẩn!',
+              text: `Bài hát "${song.title}" đã được ẩn khỏi danh sách công khai.`,
+              icon: 'success',
+              background: '#1c1c28',
+              color: '#ffffff',
+              confirmButtonColor: '#1ed760',
+              timer: 2000,
+              timerProgressBar: true
+            });
+          },
+          error: () => {
+            Swal.fire({
+              title: 'Lỗi!',
+              text: 'Không thể ẩn bài hát. Vui lòng thử lại.',
+              icon: 'error',
+              background: '#1c1c28',
+              color: '#ffffff',
+              confirmButtonColor: '#1ed760'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  restoreSong(song: ArtistSongItem): void {
+    this.libraryService.restoreSong(song.id).subscribe({
+      next: () => {
+        this.cdr.detectChanges();
+        Swal.fire({
+          title: 'Đã bỏ ẩn!',
+          text: `Bài hát "${song.title}" đã được hiển thị trở lại.`,
+          icon: 'success',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+          timer: 2000,
+          timerProgressBar: true
+        });
+      },
+      error: () => {
+        Swal.fire({
+          title: 'Lỗi!',
+          text: 'Không thể bỏ ẩn bài hát. Vui lòng thử lại.',
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760'
+        });
+      }
+    });
+  }
+
   refreshManagement(): void {
     this.managementSearch = '';
     this.managementStatusFilter = 'ALL';

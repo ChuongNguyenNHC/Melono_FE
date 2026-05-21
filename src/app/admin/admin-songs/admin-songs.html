@@ -65,17 +65,9 @@
                   <i class='bx bx-x-circle text-base'></i>
                   Từ chối
                 </button>
-                <button *ngIf="song.status === 'Approved'" type="button" (click)="hide.emit(song)" class="inline-flex items-center gap-2 rounded-full bg-slate-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-600">
-                  <i class='bx bx-hide text-base'></i>
-                  Ẩn
-                </button>
                 <button *ngIf="song.status === 'Rejected'" type="button" (click)="approve.emit(song)" class="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/30 transition hover:bg-emerald-500/20">
                   <i class='bx bx-reset text-base'></i>
                   Duyệt lại
-                </button>
-                <button *ngIf="song.status === 'Hidden'" type="button" (click)="restore.emit(song)" class="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/30 transition hover:bg-emerald-500/20">
-                  <i class='bx bx-show text-base'></i>
-                  Bỏ ẩn
                 </button>
               </div>
             </td>

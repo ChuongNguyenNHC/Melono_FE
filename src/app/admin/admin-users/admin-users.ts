@@ -21,6 +21,10 @@ export class AdminUsers {
   @Input() search = '';
   @Input() roleFilter: UserRole | 'ALL' = 'ALL';
   @Input() statusFilter: UserStatus | 'ALL' = 'ALL';
+  @Input() currentPage = 0;
+  @Input() pageSize = 10;
+  @Input() totalElements = 0;
+  @Input() totalPages = 0;
 
   @Output() searchChange = new EventEmitter<string>();
   @Output() roleFilterChange = new EventEmitter<UserRole | 'ALL'>();
@@ -29,6 +33,7 @@ export class AdminUsers {
   @Output() openDrawer = new EventEmitter<UserRecord>();
   @Output() ban = new EventEmitter<UserRecord>();
   @Output() unban = new EventEmitter<UserRecord>();
+  @Output() pageChange = new EventEmitter<number>();
 
   readonly getUserRoleClass = getUserRoleClass;
   readonly getUserStatusClass = getUserStatusClass;
@@ -37,5 +42,9 @@ export class AdminUsers {
 
   trackById(_index: number, item: UserRecord): string {
     return item.id;
+  }
+
+  getMin(a: number, b: number): number {
+    return Math.min(a, b);
   }
 }

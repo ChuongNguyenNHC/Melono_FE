@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import Swal from 'sweetalert2';
 
 import { MusicSong } from '../models/music-domain.models';
@@ -11,7 +12,6 @@ import { AdminGenres } from './admin-genres/admin-genres';
 import { AdminModal } from './admin-modal/admin-modal';
 import { AdminSongs } from './admin-songs/admin-songs';
 import { AdminUsers } from './admin-users/admin-users';
-import { ADMIN_ARTIST_REQUESTS, ADMIN_USERS } from './admin.mock-data';
 import {
   AdminTab,
   ArtistRequest,
@@ -36,6 +36,8 @@ import {
 })
 export class Admin {
   private readonly musicLibraryService = inject(MusicLibraryService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly http = inject(HttpClient);
 
   activeTab: AdminTab = 'songs';
   genres$ = this.musicLibraryService.genres$;
@@ -65,15 +67,22 @@ export class Admin {
   rejectArtistReason = '';
 
   songs: SongItem[] = [];
-  users: UserRecord[] = ADMIN_USERS.map(user => ({ ...user }));
-  artistRequests: ArtistRequest[] = ADMIN_ARTIST_REQUESTS.map(request => ({ ...request }));
+  users: UserRecord[] = [];
+  userPage = 0;
+  userPageSize = 10;
+  userTotalElements = 0;
+  userTotalPages = 0;
+  artistRequests: ArtistRequest[] = [];
 
   constructor() {
     this.musicLibraryService.songs$.subscribe(songs => {
       this.songs = songs
         .filter(song => song.source === 'LOCAL')
         .map(song => this.toSongItem(song));
+      this.cdr.detectChanges();
     });
+    this.loadUsers();
+    this.loadArtistRequests();
   }
 
   readonly tabItems = [
@@ -87,6 +96,12 @@ export class Admin {
     this.activeTab = tab;
     this.closeDrawer();
     this.closeModal();
+    if (tab === 'users') {
+      this.loadUsers();
+    }
+    if (tab === 'artists') {
+      this.loadArtistRequests();
+    }
   }
 
   get filteredSongs(): SongItem[] {
@@ -105,21 +120,7 @@ export class Admin {
   }
 
   get filteredUsers(): UserRecord[] {
-    const keyword = this.userSearch.trim().toLowerCase();
-
-    return this.users.filter(user => {
-      const matchedKeyword =
-        !keyword ||
-        [user.name, user.username, user.email, user.id].join(' ').toLowerCase().includes(keyword);
-
-      const matchedRole =
-        this.userRoleFilter === 'ALL' || user.role === this.userRoleFilter;
-
-      const matchedStatus =
-        this.userStatusFilter === 'ALL' || user.status === this.userStatusFilter;
-
-      return matchedKeyword && matchedRole && matchedStatus;
-    });
+    return this.users;
   }
 
   get filteredArtistRequests(): ArtistRequest[] {
@@ -149,11 +150,14 @@ export class Admin {
     this.userSearch = '';
     this.userRoleFilter = 'ALL';
     this.userStatusFilter = 'ALL';
+    this.userPage = 0;
+    this.loadUsers();
   }
 
   refreshArtists(): void {
     this.artistSearch = '';
     this.artistStatusFilter = 'ALL';
+    this.loadArtistRequests();
   }
 
   createGenre(name: string): void {
@@ -172,29 +176,34 @@ export class Admin {
     this.selectedSong = song;
     this.drawerType = 'song';
     this.isDrawerOpen = true;
+    this.cdr.detectChanges();
   }
 
   openUserDrawer(user: UserRecord): void {
     this.selectedUser = user;
     this.drawerType = 'user';
     this.isDrawerOpen = true;
+    this.cdr.detectChanges();
   }
 
   openArtistDrawer(request: ArtistRequest): void {
     this.selectedArtistRequest = request;
     this.drawerType = 'artist';
     this.isDrawerOpen = true;
+    this.cdr.detectChanges();
   }
 
   closeDrawer(): void {
     this.drawerType = null;
     this.isDrawerOpen = false;
+    this.cdr.detectChanges();
   }
 
   openApproveSongModal(song: SongItem): void {
     this.selectedSong = song;
     this.modalType = 'approveSong';
     this.isModalOpen = true;
+    this.cdr.detectChanges();
   }
 
   openRejectSongModal(song: SongItem): void {
@@ -202,12 +211,14 @@ export class Admin {
     this.rejectSongReason = '';
     this.modalType = 'rejectSong';
     this.isModalOpen = true;
+    this.cdr.detectChanges();
   }
 
   openHideSongModal(song: SongItem): void {
     this.selectedSong = song;
     this.modalType = 'hideSong';
     this.isModalOpen = true;
+    this.cdr.detectChanges();
   }
 
   openBanUserModal(user: UserRecord): void {
@@ -215,18 +226,21 @@ export class Admin {
     this.banReason = '';
     this.modalType = 'banUser';
     this.isModalOpen = true;
+    this.cdr.detectChanges();
   }
 
   openUnbanUserModal(user: UserRecord): void {
     this.selectedUser = user;
     this.modalType = 'unbanUser';
     this.isModalOpen = true;
+    this.cdr.detectChanges();
   }
 
   openApproveArtistModal(request: ArtistRequest): void {
     this.selectedArtistRequest = request;
     this.modalType = 'approveArtist';
     this.isModalOpen = true;
+    this.cdr.detectChanges();
   }
 
   openRejectArtistModal(request: ArtistRequest): void {
@@ -234,6 +248,7 @@ export class Admin {
     this.rejectArtistReason = '';
     this.modalType = 'rejectArtist';
     this.isModalOpen = true;
+    this.cdr.detectChanges();
   }
 
   closeModal(): void {
@@ -242,6 +257,7 @@ export class Admin {
     this.rejectSongReason = '';
     this.banReason = '';
     this.rejectArtistReason = '';
+    this.cdr.detectChanges();
   }
 
   confirmApproveSong(): void {
@@ -370,52 +386,250 @@ export class Admin {
 
   confirmBanUser(): void {
     if (!this.selectedUser || this.selectedUser.role === 'ADMIN') return;
-    this.selectedUser.status = 'Banned';
-    this.selectedUser.banReason = this.banReason.trim();
-    this.closeModal();
+    const userEmail = this.selectedUser.email;
+    this.musicLibraryService.banUserApi(this.selectedUser.id, this.banReason).subscribe({
+      next: () => {
+        this.loadUsers();
+        this.closeModal();
+        Swal.fire({
+          title: 'Đã khóa tài khoản!',
+          text: `Tài khoản của "${userEmail}" đã bị khóa thành công.`,
+          icon: 'warning',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+          timer: 2500,
+          timerProgressBar: true
+        });
+      },
+      error: (err) => {
+        console.error('Failed to ban user', err);
+        Swal.fire({
+          title: 'Lỗi!',
+          text: 'Không thể khóa tài khoản. Vui lòng thử lại.',
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760'
+        });
+      }
+    });
   }
 
   confirmUnbanUser(): void {
     if (!this.selectedUser || this.selectedUser.role === 'ADMIN') return;
-    this.selectedUser.status = 'Active';
-    this.selectedUser.banReason = '';
-    this.closeModal();
+    const userEmail = this.selectedUser.email;
+    this.musicLibraryService.unbanUserApi(this.selectedUser.id).subscribe({
+      next: () => {
+        this.loadUsers();
+        this.closeModal();
+        Swal.fire({
+          title: 'Đã mở khóa!',
+          text: `Tài khoản của "${userEmail}" đã hoạt động trở lại.`,
+          icon: 'success',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+          timer: 2500,
+          timerProgressBar: true
+        });
+      },
+      error: (err) => {
+        console.error('Failed to unban user', err);
+        Swal.fire({
+          title: 'Lỗi!',
+          text: 'Không thể mở khóa tài khoản. Vui lòng thử lại.',
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760'
+        });
+      }
+    });
+  }
+
+  onUserSearchChange(val: string): void {
+    this.userSearch = val;
+    this.userPage = 0;
+    this.loadUsers();
+  }
+
+  onUserRoleChange(val: UserRole | 'ALL'): void {
+    this.userRoleFilter = val;
+    this.userPage = 0;
+    this.loadUsers();
+  }
+
+  onUserStatusChange(val: UserStatus | 'ALL'): void {
+    this.userStatusFilter = val;
+    this.userPage = 0;
+    this.loadUsers();
+  }
+
+  onUserPageChange(page: number): void {
+    this.userPage = page;
+    this.loadUsers();
+  }
+
+  loadUsers(): void {
+    this.musicLibraryService.getUsersPage(
+      this.userSearch,
+      this.userRoleFilter,
+      this.userStatusFilter,
+      this.userPage,
+      this.userPageSize
+    ).subscribe({
+      next: (res) => {
+        if (res && res.content) {
+          this.users = res.content.map((user: any) => this.toUserRecord(user));
+          this.userTotalElements = res.totalElements || 0;
+          this.userTotalPages = res.totalPages || 0;
+        } else {
+          this.users = [];
+          this.userTotalElements = 0;
+          this.userTotalPages = 0;
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load users from backend API', err);
+        this.users = [];
+        this.userTotalElements = 0;
+        this.userTotalPages = 0;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private toUserRecord(user: any): UserRecord {
+    return {
+      id: user.userId,
+      name: user.stageName || user.username || 'Người dùng Melono',
+      username: user.username || 'user',
+      email: user.email,
+      avatar: user.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.username || 'User') + '&background=random',
+      role: user.role as UserRole,
+      status: user.status === 'BANNED' ? 'Banned' : 'Active',
+      createdAt: this.formatDate(user.createdAt),
+      playlistCount: 0,
+      likedSongsCount: 0,
+      banReason: user.banReason || undefined
+    };
   }
 
   confirmApproveArtist(): void {
     if (!this.selectedArtistRequest) return;
+    const requestId = this.selectedArtistRequest.id;
+    const stageName = this.selectedArtistRequest.stageName;
 
-    this.selectedArtistRequest.status = 'Approved';
-
-    const targetUser = this.users.find(
-      user => user.id === this.selectedArtistRequest?.userId
-    );
-
-    if (targetUser) {
-      targetUser.role = 'ARTIST';
-      if (targetUser.status === 'Banned') {
-        targetUser.status = 'Active';
+    this.http.put<any>(`http://localhost:8080/api/artist-requests/${requestId}/status?status=APPROVED`, {}).subscribe({
+      next: () => {
+        this.loadArtistRequests();
+        this.loadUsers();
+        this.closeModal();
+        this.closeDrawer();
+        Swal.fire({
+          title: 'Đã cấp quyền nghệ sĩ!',
+          text: `Nghệ sĩ "${stageName}" đã được duyệt thành công.`,
+          icon: 'success',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+          timer: 2500,
+          timerProgressBar: true,
+        });
+      },
+      error: (err) => {
+        const msg = err.error?.message || err.error || 'Không thể duyệt yêu cầu. Vui lòng thử lại.';
+        Swal.fire({
+          title: 'Lỗi!',
+          text: msg,
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+        });
       }
-    }
-
-    this.closeModal();
+    });
   }
 
   confirmRejectArtist(): void {
     if (!this.selectedArtistRequest) return;
-    this.selectedArtistRequest.status = 'Rejected';
-    this.selectedArtistRequest.rejectReason = this.rejectArtistReason.trim();
-    this.closeModal();
+    const requestId = this.selectedArtistRequest.id;
+    const stageName = this.selectedArtistRequest.stageName;
+
+    this.http.put<any>(`http://localhost:8080/api/artist-requests/${requestId}/status?status=REJECTED`, {}).subscribe({
+      next: () => {
+        this.loadArtistRequests();
+        this.closeModal();
+        this.closeDrawer();
+        Swal.fire({
+          title: 'Đã từ chối!',
+          text: `Yêu cầu của nghệ sĩ "${stageName}" đã bị từ chối.`,
+          icon: 'info',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+          timer: 2500,
+          timerProgressBar: true,
+        });
+      },
+      error: () => {
+        Swal.fire({
+          title: 'Lỗi!',
+          text: 'Không thể từ chối yêu cầu. Vui lòng thử lại.',
+          icon: 'error',
+          background: '#1c1c28',
+          color: '#ffffff',
+          confirmButtonColor: '#1ed760',
+        });
+      }
+    });
   }
 
   trackById(_index: number, item: { id: string }): string {
     return item.id;
   }
 
+  loadArtistRequests(): void {
+    this.http.get<any[]>('http://localhost:8080/api/artist-requests').subscribe({
+      next: (data) => {
+        this.artistRequests = data.map(req => this.toArtistRequest(req));
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load artist requests from API', err);
+        this.artistRequests = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private toArtistRequest(req: any): ArtistRequest {
+    const statusMap: Record<string, RequestStatus> = {
+      'PENDING': 'Pending',
+      'APPROVED': 'Approved',
+      'REJECTED': 'Rejected',
+    };
+    return {
+      id: req.requestId,
+      userId: req.userId,
+      userName: req.userName || 'Người dùng',
+      email: req.email || '',
+      avatar: req.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(req.userName || 'User') + '&background=random',
+      stageName: req.stageName,
+      genre: req.genre || '',
+      bio: req.bio || '',
+      createdAt: this.formatDate(req.createdAt),
+      status: statusMap[req.status?.toUpperCase()] || 'Pending',
+    };
+  }
+
   private syncSongs(): void {
     this.songs = this.musicLibraryService.snapshot.songs
       .filter(song => song.source === 'LOCAL')
       .map(song => this.toSongItem(song));
+    this.cdr.detectChanges();
   }
 
   private toSongItem(song: MusicSong): SongItem {

@@ -51,14 +51,6 @@
             <i class='bx bx-x-circle text-lg'></i>
             Từ chối
           </button>
-          <button *ngIf="song.status === 'Approved'" type="button" (click)="hideSong.emit(song)" class="inline-flex items-center gap-2 rounded-2xl bg-slate-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-600">
-            <i class='bx bx-hide text-lg'></i>
-            Ẩn bài hát
-          </button>
-          <button *ngIf="song.status === 'Hidden'" type="button" (click)="restoreSong.emit(song)" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/30 transition hover:bg-emerald-500/20">
-            <i class='bx bx-show text-lg'></i>
-            Bỏ ẩn
-          </button>
         </div>
       </div>
     </ng-container>
@@ -78,8 +70,6 @@
         <div class="mt-5 grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 text-sm text-slate-300">
           <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Username</span><span>{{ user.username }}</span></div>
           <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Ngày tạo</span><span>{{ user.createdAt }}</span></div>
-          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Số playlist</span><span>{{ user.playlistCount }}</span></div>
-          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Bài hát đã thích</span><span>{{ user.likedSongsCount }}</span></div>
           <div *ngIf="user.banReason" class="rounded-2xl bg-rose-500/10 p-4 text-rose-300">
             <p class="text-xs uppercase tracking-[0.24em]">Lý do khóa</p>
             <p class="mt-2 text-sm">{{ user.banReason }}</p>
@@ -111,7 +101,6 @@
         </div>
 
         <div class="mt-5 grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 text-sm text-slate-300">
-          <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Thể loại</span><span>{{ request.genre }}</span></div>
           <div class="flex items-center justify-between gap-4"><span class="text-slate-500">Ngày gửi</span><span>{{ request.createdAt }}</span></div>
           <div class="flex items-center justify-between gap-4">
             <span class="text-slate-500">Trạng thái</span>

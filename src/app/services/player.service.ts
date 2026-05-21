@@ -83,9 +83,33 @@ export class PlayerService {
 
   loadAndPlay(song: Song) {
     this.currentSongSubject.next(song);
-    if (typeof song.id === 'string') {
-      this.musicLibraryService.recordListen(this.musicLibraryService.currentUserId, song.id);
+    
+    const idStr = String(song.id);
+    let itunesId: string | null = null;
+    if (song.itunesId) {
+      itunesId = String(song.itunesId);
+    } else {
+      const isItunesFormat = idStr.startsWith('itunes-') || (!isNaN(Number(idStr)) && !idStr.startsWith('s') && !idStr.includes('-'));
+      if (isItunesFormat) {
+        itunesId = idStr.replace('itunes-', '');
+      }
     }
+
+    let resolvedSongId = idStr;
+    if (itunesId) {
+      // Tự động lưu/đăng ký bài hát iTunes vào danh sách state
+      resolvedSongId = this.musicLibraryService.saveItunesSong({
+        id: itunesId,
+        title: song.title,
+        artist: song.artist,
+        coverUrl: song.coverUrl,
+        previewUrl: song.previewUrl,
+        duration: song.duration
+      });
+    }
+
+    this.musicLibraryService.recordListen(this.musicLibraryService.currentUserId, resolvedSongId);
+
     this.audio.src = song.previewUrl;
     this.audio.load();
     this.audio.play().catch(e => console.error("Error playing audio", e));

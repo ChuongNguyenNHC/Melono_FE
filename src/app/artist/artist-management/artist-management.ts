@@ -85,6 +85,8 @@ export class ArtistManagement implements OnDestroy {
   @Output() thumbnailFileRemoved = new EventEmitter<void>();
   @Output() cancelForm = new EventEmitter<void>();
   @Output() submitForm = new EventEmitter<void>();
+  @Output() hideSong = new EventEmitter<ArtistSongItem>();
+  @Output() restoreSong = new EventEmitter<ArtistSongItem>();
 
   readonly getSongStatusClass = getSongStatusClass;
   readonly getSongStatusLabel = getSongStatusLabel;

@@ -1,53 +1,55 @@
 <section class="h-full overflow-y-auto bg-[#070b14] px-4 py-6 text-slate-100 sm:px-6 xl:px-8">
   <main class="mx-auto max-w-4xl rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 shadow-[0_24px_80px_rgba(2,6,23,0.35)] sm:p-8">
-    <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">&#272;&#259;ng k&yacute; ngh&#7879; s&#297;</p>
-    <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">Y&ecirc;u c&#7847;u tr&#7903; th&agrave;nh ngh&#7879; s&#297;</h1>
+    <p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">&#272;&#259;ng k&#253; ngh&#7879; s&#297;</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight text-white">Y&#234;u c&#7847;u tr&#7903; th&#224;nh ngh&#7879; s&#297;</h1>
     <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-      T&agrave;i kho&#7843;n ng&#432;&#7901;i d&ugrave;ng c&oacute; th&#7875; g&#7917;i h&#7891; s&#417; xin c&#7845;p quy&#7873;n Ngh&#7879; s&#297;. Qu&#7843;n tr&#7883; vi&ecirc;n s&#7869; duy&#7879;t ho&#7863;c t&#7915; ch&#7889;i k&egrave;m l&yacute; do.
+      T&#224;i kho&#7843;n ng&#432;&#7901;i d&#249;ng c&#243; th&#7875; g&#7917;i h&#7891; s&#417; xin c&#7845;p quy&#7873;n Ngh&#7879; s&#297;. Qu&#7843;n tr&#7883; vi&#234;n s&#7869; duy&#7879;t ho&#7863;c t&#7915; ch&#7889;i k&#232;m l&#253; do.
     </p>
 
-    <form class="mt-7 grid gap-5" (ngSubmit)="submit()">
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="mt-10 flex flex-col items-center justify-center py-16">
+      <div class="h-10 w-10 rounded-full border-4 border-t-transparent border-emerald-400 animate-spin mb-4"></div>
+      <p class="text-sm text-slate-400">&#272;ang ki&#7875;m tra tr&#7841;ng th&#225;i y&#234;u c&#7847;u...</p>
+    </div>
+
+    <!-- Already submitted state -->
+    <div *ngIf="!isLoading && alreadyRequested" class="mt-7 rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-8 text-center">
+      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 mb-5">
+        <i *ngIf="existingStatus === 'PENDING'" class='bx bx-time-five text-4xl text-amber-400'></i>
+        <i *ngIf="existingStatus === 'APPROVED'" class='bx bx-badge-check text-4xl text-emerald-400'></i>
+      </div>
+      <h2 *ngIf="existingStatus === 'PENDING'" class="text-xl font-semibold text-white">B&#7841;n &#273;&#227; g&#7917;i y&#234;u c&#7847;u r&#7891;i</h2>
+      <h2 *ngIf="existingStatus === 'APPROVED'" class="text-xl font-semibold text-emerald-300">Y&#234;u c&#7847;u &#273;&#227; &#273;&#432;&#7907;c duy&#7879;t!</h2>
+      <p *ngIf="existingStatus === 'PENDING'" class="mt-3 text-sm leading-6 text-slate-400 max-w-md mx-auto">
+        H&#7891; s&#417; ngh&#7879; s&#297; c&#7911;a b&#7841;n &#273;ang n&#7857;m trong h&#224;ng ch&#7901; duy&#7879;t. Qu&#7843;n tr&#7883; vi&#234;n s&#7869; x&#7917; l&#253; trong th&#7901;i gian s&#7899;m nh&#7845;t. Vui l&#242;ng ch&#7901; duy&#7879;t.
+      </p>
+      <p *ngIf="existingStatus === 'APPROVED'" class="mt-3 text-sm leading-6 text-slate-400 max-w-md mx-auto">
+        B&#7841;n &#273;&#227; &#273;&#432;&#7907;c c&#7845;p quy&#7873;n Ngh&#7879; s&#297;. B&#7841;n c&#243; th&#7875; t&#7843;i l&#234;n v&#224; qu&#7843;n l&#253; b&#224;i h&#225;t ngay b&#226;y gi&#7901;.
+      </p>
+      <div class="mt-6 inline-flex items-center gap-2 rounded-full bg-white/5 px-5 py-2.5 text-xs font-semibold text-slate-300 border border-white/10">
+        <i class='bx bx-info-circle text-sm'></i>
+        <span *ngIf="existingStatus === 'PENDING'">Tr&#7841;ng th&#225;i: &#272;ang ch&#7901; duy&#7879;t</span>
+        <span *ngIf="existingStatus === 'APPROVED'">Tr&#7841;ng th&#225;i: &#272;&#227; duy&#7879;t</span>
+      </div>
+    </div>
+
+    <!-- Form (only visible if not already requested and not loading) -->
+    <form *ngIf="!isLoading && !alreadyRequested" class="mt-7 grid gap-5" (ngSubmit)="submit()">
       <label class="block">
         <span class="text-sm font-medium text-slate-300">Ngh&#7879; danh</span>
-        <input [(ngModel)]="stageName" name="stageName" placeholder="V&iacute; d&#7909;: Ho&agrave;ng Acoustic" class="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-white outline-none transition focus:border-emerald-400" />
+        <input [(ngModel)]="stageName" name="stageName" placeholder="V&#237; d&#7909;: Ho&#224;ng Acoustic" class="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-white outline-none transition focus:border-emerald-400" />
       </label>
-
-      <div class="block" *ngIf="genres$ | async as genres">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span class="text-sm font-medium text-slate-300">Th&#7875; lo&#7841;i ch&iacute;nh</span>
-          <button type="button" (click)="toggleGenreCreator()" class="inline-flex items-center gap-1 text-sm font-semibold text-emerald-300 transition hover:text-emerald-200">
-            <i class='bx bx-plus text-base'></i>
-            T&#7841;o th&ecirc;m
-          </button>
-        </div>
-
-        <select [(ngModel)]="genre" name="genre" class="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 text-sm text-white outline-none transition focus:border-emerald-400">
-          <option value="">Ch&#7885;n th&#7875; lo&#7841;i ph&ugrave; h&#7907;p</option>
-          <option *ngFor="let item of genres" [value]="item.name">{{ item.name }}</option>
-        </select>
-
-        <div *ngIf="showGenreCreator" class="mt-3 grid gap-3 rounded-2xl border border-emerald-400/25 bg-emerald-400/5 p-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-          <input [(ngModel)]="newGenreName" name="newGenreName" placeholder="Nh&#7853;p th&#7875; lo&#7841;i m&#7899;i" class="h-11 rounded-xl border border-white/10 bg-slate-900 px-4 text-sm text-white outline-none transition focus:border-emerald-400" />
-          <button type="button" (click)="createGenre()" class="inline-flex h-11 items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">
-            Th&ecirc;m v&agrave; ch&#7885;n
-          </button>
-        </div>
-      </div>
 
       <label class="block">
         <span class="text-sm font-medium text-slate-300">Ti&#7875;u s&#7917; ngh&#7879; s&#297;</span>
-        <textarea [(ngModel)]="bio" name="bio" rows="7" placeholder="M&ocirc; t&#7843; phong c&aacute;ch &acirc;m nh&#7841;c, kinh nghi&#7879;m, &#273;&#7883;nh h&#432;&#7899;ng..." class="mt-2 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400"></textarea>
+        <textarea [(ngModel)]="bio" name="bio" rows="7" placeholder="M&#244; t&#7843; phong c&#225;ch &#226;m nh&#7841;c, kinh nghi&#7879;m, &#273;&#7883;nh h&#432;&#7899;ng..." class="mt-2 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-emerald-400"></textarea>
       </label>
 
       <div class="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
-        <p *ngIf="submitted; else pendingText" class="text-sm font-medium text-emerald-300">
-          &#272;&atilde; g&#7917;i y&ecirc;u c&#7847;u. H&#7891; s&#417; s&#7869; n&#7857;m trong h&agrave;ng ch&#7901; duy&#7879;t c&#7911;a qu&#7843;n tr&#7883; vi&ecirc;n.
-        </p>
-        <ng-template #pendingText>
-          <p class="text-sm text-slate-400">Sau khi &#273;&#432;&#7907;c duy&#7879;t, t&agrave;i kho&#7843;n c&oacute; th&#7875; t&#7843;i l&ecirc;n v&agrave; qu&#7843;n l&yacute; b&agrave;i h&aacute;t.</p>
-        </ng-template>
-        <button class="rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">
-          G&#7917;i y&ecirc;u c&#7847;u
+        <p class="text-sm text-slate-400">Sau khi &#273;&#432;&#7907;c duy&#7879;t, t&#224;i kho&#7843;n c&#243; th&#7875; t&#7843;i l&#234;n v&#224; qu&#7843;n l&#253; b&#224;i h&#225;t.</p>
+        <button [disabled]="isSubmitting" class="rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+          <i *ngIf="isSubmitting" class='bx bx-loader-alt bx-spin text-base'></i>
+          {{ isSubmitting ? '&#272;ang g&#7917;i...' : 'G&#7917;i y&#234;u c&#7847;u' }}
         </button>
       </div>
     </form>
