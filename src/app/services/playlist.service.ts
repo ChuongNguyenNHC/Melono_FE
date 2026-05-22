@@ -32,6 +32,16 @@ export class PlaylistService {
   private followedPlaylistsSubject = new BehaviorSubject<Playlist[]>([]);
   followedPlaylists$ = this.followedPlaylistsSubject.asObservable();
 
+  constructor() {
+    this.authService.currentUser$.subscribe(user => {
+      if (!user) {
+        this.playlistsSubject.next([]);
+        this.likedSongsSubject.next([]);
+        this.followedPlaylistsSubject.next([]);
+      }
+    });
+  }
+
   getUserPlaylists(): Observable<Playlist[]> {
     const user = this.authService.currentUserValue;
     if (!user) return of([]);
