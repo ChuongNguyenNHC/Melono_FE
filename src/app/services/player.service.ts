@@ -82,6 +82,37 @@ export class PlayerService {
   }
 
   loadAndPlay(song: Song) {
+    if (song.status === 'HIDDEN' || song.status === 'Hidden') {
+      console.warn('Cannot play hidden song, auto-skipping:', song);
+      
+      if (this.queue.length <= 1) {
+        this.isPlayingSubject.next(false);
+        this.audio.pause();
+        return;
+      }
+
+      const startIndex = this.currentIndex;
+      let nextIdx = (this.currentIndex + 1) % this.queue.length;
+      let found = false;
+      
+      while (nextIdx !== startIndex) {
+        const nextSong = this.queue[nextIdx];
+        if (nextSong.status !== 'HIDDEN' && nextSong.status !== 'Hidden') {
+          this.currentIndex = nextIdx;
+          found = true;
+          break;
+        }
+        nextIdx = (nextIdx + 1) % this.queue.length;
+      }
+
+      if (found) {
+        this.loadAndPlay(this.queue[this.currentIndex]);
+      } else {
+        this.isPlayingSubject.next(false);
+        this.audio.pause();
+      }
+      return;
+    }
     this.currentSongSubject.next(song);
     
     const idStr = String(song.id);
@@ -108,7 +139,9 @@ export class PlayerService {
       });
     }
 
-    this.musicLibraryService.recordListen(this.musicLibraryService.currentUserId, resolvedSongId);
+    if (!itunesId) {
+      this.musicLibraryService.recordListen(this.musicLibraryService.currentUserId, resolvedSongId);
+    }
 
     this.audio.src = song.previewUrl;
     this.audio.load();

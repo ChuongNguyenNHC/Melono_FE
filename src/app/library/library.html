@@ -154,21 +154,39 @@
              class="flex gap-6 overflow-x-auto pb-4 pt-2 scrollbar-hide">
           
           <div *ngFor="let song of likedSongs; let i = index; trackBy: trackBySongId" 
-               [routerLink]="['/song', song.id]" 
+               [routerLink]="isSongHidden(song) ? null : ['/song', song.id]" 
+               [class.cursor-not-allowed]="isSongHidden(song)"
+               [class.opacity-40]="isSongHidden(song)"
+               [class.hover:bg-white/[0.03]]="isSongHidden(song)"
+               [class.hover:border-white/5]="isSongHidden(song)"
+               [class.hover:-translate-y-0]="isSongHidden(song)"
                class="group relative w-[170px] shrink-0 cursor-pointer rounded-xl bg-white/[0.03] border border-white/5 p-3.5 text-left transition-all duration-300 hover:bg-white/[0.08] hover:border-white/10 hover:-translate-y-1 shadow-lg">
             
             <!-- Image Container with Play Overlay & Heart Button -->
             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#24242d] shadow-md">
               <img [src]="song.coverUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=100&auto=format&fit=crop'" 
                    [alt]="song.title" 
-                   class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                   [class.grayscale]="isSongHidden(song)"
+                   [class.opacity-30]="isSongHidden(song)"
+                   [class.group-hover:scale-105]="!isSongHidden(song)"
+                   class="h-full w-full object-cover transition-transform duration-500" />
               
               <!-- Play Button Overlay -->
-              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <div *ngIf="!isSongHidden(song)" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span (click)="playSong(song, likedSongs); $event.stopPropagation()" 
                       class="flex h-11 w-11 items-center justify-center rounded-full bg-[#1ed760] text-black shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300 hover:scale-105 active:scale-95 cursor-pointer"
                       title="Phát nhạc">
                   <i class='bx bx-play text-2xl ml-0.5'></i>
+                </span>
+              </div>
+
+              <!-- Block Icon Overlay if hidden -->
+              <div *ngIf="isSongHidden(song)" class="absolute inset-0 bg-black/75 flex flex-col items-center justify-center gap-1.5 p-2 text-center">
+                <div class="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <i class='bx bx-low-vision text-red-500 text-lg animate-pulse'></i>
+                </div>
+                <span class="px-2 py-0.5 bg-red-500/20 border border-red-500/30 text-red-500 rounded text-[9px] font-extrabold tracking-widest uppercase">
+                  Đã ẩn
                 </span>
               </div>
 
@@ -180,17 +198,18 @@
                 <i class='bx bxs-heart text-sm'></i>
               </button>
               
-              <!-- Index indicator -->
-              <span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/60 text-[9px] font-extrabold text-white/90">
-                #{{ i + 1 }}
-              </span>
+
             </div>
 
             <!-- Song Info -->
-            <h3 class="mt-3 truncate text-sm font-bold text-white group-hover:text-[#1ed760] transition-colors" [title]="song.title">{{ song.title }}</h3>
+            <h3 class="mt-3 truncate text-sm font-bold text-white transition-colors"
+                [class.text-gray-500]="isSongHidden(song)"
+                [class.group-hover:text-gray-500]="isSongHidden(song)"
+                [class.group-hover:text-[#1ed760]]="!isSongHidden(song)"
+                [title]="song.title">{{ song.title }}</h3>
             
             <div class="mt-1 flex items-center justify-between text-xs text-gray-400">
-              <span class="truncate font-semibold max-w-[95px]">{{ song.artist }}</span>
+              <span class="truncate font-semibold max-w-[95px]" [class.text-gray-600]="isSongHidden(song)">{{ song.artist }}</span>
               <span class="font-medium shrink-0 bg-white/5 px-1.5 py-0.5 rounded text-[10px]">{{ song.duration }}</span>
             </div>
             
@@ -223,21 +242,39 @@
              class="flex gap-6 overflow-x-auto pb-4 pt-2 scrollbar-hide">
           
           <div *ngFor="let song of recentSongs; let i = index; trackBy: trackBySongId" 
-               [routerLink]="['/song', song.id]" 
+               [routerLink]="isSongHidden(song) ? null : ['/song', song.id]" 
+               [class.cursor-not-allowed]="isSongHidden(song)"
+               [class.opacity-40]="isSongHidden(song)"
+               [class.hover:bg-white/[0.03]]="isSongHidden(song)"
+               [class.hover:border-white/5]="isSongHidden(song)"
+               [class.hover:-translate-y-0]="isSongHidden(song)"
                class="group relative w-[170px] shrink-0 cursor-pointer rounded-xl bg-white/[0.03] border border-white/5 p-3.5 text-left transition-all duration-300 hover:bg-white/[0.08] hover:border-white/10 hover:-translate-y-1 shadow-lg">
             
             <!-- Image Container with Play Overlay & Heart Button -->
             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#24242d] shadow-md">
               <img [src]="song.coverUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=100&auto=format&fit=crop'" 
                    [alt]="song.title" 
-                   class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                   [class.grayscale]="isSongHidden(song)"
+                   [class.opacity-30]="isSongHidden(song)"
+                   [class.group-hover:scale-105]="!isSongHidden(song)"
+                   class="h-full w-full object-cover transition-transform duration-500" />
               
               <!-- Play Button Overlay -->
-              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <div *ngIf="!isSongHidden(song)" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span (click)="playSong(song, recentSongs); $event.stopPropagation()" 
                       class="flex h-11 w-11 items-center justify-center rounded-full bg-[#1ed760] text-black shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300 hover:scale-105 active:scale-95 cursor-pointer"
                       title="Phát nhạc">
                   <i class='bx bx-play text-2xl ml-0.5'></i>
+                </span>
+              </div>
+
+              <!-- Block Icon Overlay if hidden -->
+              <div *ngIf="isSongHidden(song)" class="absolute inset-0 bg-black/75 flex flex-col items-center justify-center gap-1.5 p-2 text-center">
+                <div class="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <i class='bx bx-low-vision text-red-500 text-lg animate-pulse'></i>
+                </div>
+                <span class="px-2 py-0.5 bg-red-500/20 border border-red-500/30 text-red-500 rounded text-[9px] font-extrabold tracking-widest uppercase">
+                  Đã ẩn
                 </span>
               </div>
 
@@ -250,17 +287,18 @@
                 <i class='bx text-sm' [ngClass]="isSongLiked(song) ? 'bxs-heart' : 'bx-heart'"></i>
               </button>
               
-              <!-- Index indicator -->
-              <span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/60 text-[9px] font-extrabold text-white/90">
-                #{{ i + 1 }}
-              </span>
+
             </div>
 
             <!-- Song Info -->
-            <h3 class="mt-3 truncate text-sm font-bold text-white group-hover:text-[#1ed760] transition-colors" [title]="song.title">{{ song.title }}</h3>
+            <h3 class="mt-3 truncate text-sm font-bold text-white transition-colors"
+                [class.text-gray-500]="isSongHidden(song)"
+                [class.group-hover:text-gray-500]="isSongHidden(song)"
+                [class.group-hover:text-[#1ed760]]="!isSongHidden(song)"
+                [title]="song.title">{{ song.title }}</h3>
             
             <div class="mt-1 flex items-center justify-between text-xs text-gray-400">
-              <span class="truncate font-semibold max-w-[95px]">{{ song.artist }}</span>
+              <span class="truncate font-semibold max-w-[95px]" [class.text-gray-600]="isSongHidden(song)">{{ song.artist }}</span>
               <span class="font-medium shrink-0 bg-white/5 px-1.5 py-0.5 rounded text-[10px]">{{ song.duration }}</span>
             </div>
             
@@ -387,19 +425,38 @@
       <div *ngIf="viewMode === 'liked'">
         <div class="grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-6">
           <div *ngFor="let song of paginatedLikedSongs; let i = index; trackBy: trackBySongId" 
-               [routerLink]="['/song', song.id]" 
+               [routerLink]="isSongHidden(song) ? null : ['/song', song.id]" 
+               [class.cursor-not-allowed]="isSongHidden(song)"
+               [class.opacity-40]="isSongHidden(song)"
+               [class.hover:bg-white/[0.03]]="isSongHidden(song)"
+               [class.hover:border-white/5]="isSongHidden(song)"
+               [class.hover:-translate-y-0]="isSongHidden(song)"
                class="group relative cursor-pointer rounded-xl bg-white/[0.03] border border-white/5 p-3.5 text-left transition-all duration-300 hover:bg-white/[0.08] hover:border-white/10 hover:-translate-y-1 shadow-lg">
             
             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#24242d] shadow-md">
               <img [src]="song.coverUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=100&auto=format&fit=crop'" 
                    [alt]="song.title" 
-                   class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                   [class.grayscale]="isSongHidden(song)"
+                   [class.opacity-30]="isSongHidden(song)"
+                   [class.group-hover:scale-105]="!isSongHidden(song)"
+                   class="h-full w-full object-cover transition-transform duration-500" />
               
-              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <!-- Play Button Overlay -->
+              <div *ngIf="!isSongHidden(song)" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span (click)="playSong(song, likedSongs); $event.stopPropagation()" 
                       class="flex h-11 w-11 items-center justify-center rounded-full bg-[#1ed760] text-black shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300 hover:scale-105 active:scale-95 cursor-pointer"
                       title="Phát nhạc">
                   <i class='bx bx-play text-2xl ml-0.5'></i>
+                </span>
+              </div>
+
+              <!-- Block Icon Overlay if hidden -->
+              <div *ngIf="isSongHidden(song)" class="absolute inset-0 bg-black/75 flex flex-col items-center justify-center gap-1.5 p-2 text-center">
+                <div class="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <i class='bx bx-low-vision text-red-500 text-lg animate-pulse'></i>
+                </div>
+                <span class="px-2 py-0.5 bg-red-500/20 border border-red-500/30 text-red-500 rounded text-[9px] font-extrabold tracking-widest uppercase">
+                  Đã ẩn
                 </span>
               </div>
 
@@ -410,15 +467,18 @@
                 <i class='bx bxs-heart text-sm'></i>
               </button>
               
-              <span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/60 text-[9px] font-extrabold text-white/90">
-                #{{ (currentPage - 1) * likedPageSize + i + 1 }}
-              </span>
+
             </div>
 
-            <h3 class="mt-3 truncate text-sm font-bold text-white group-hover:text-[#1ed760] transition-colors" [title]="song.title">{{ song.title }}</h3>
+            <!-- Song Info -->
+            <h3 class="mt-3 truncate text-sm font-bold text-white transition-colors"
+                [class.text-gray-500]="isSongHidden(song)"
+                [class.group-hover:text-gray-500]="isSongHidden(song)"
+                [class.group-hover:text-[#1ed760]]="!isSongHidden(song)"
+                [title]="song.title">{{ song.title }}</h3>
             
             <div class="mt-1 flex items-center justify-between text-xs text-gray-400">
-              <span class="truncate font-semibold max-w-[95px]">{{ song.artist }}</span>
+              <span class="truncate font-semibold max-w-[95px]" [class.text-gray-600]="isSongHidden(song)">{{ song.artist }}</span>
               <span class="font-medium shrink-0 bg-white/5 px-1.5 py-0.5 rounded text-[10px]">{{ song.duration }}</span>
             </div>
           </div>
@@ -429,19 +489,37 @@
       <div *ngIf="viewMode === 'recent'">
         <div class="grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-6">
           <div *ngFor="let song of paginatedRecentSongs; let i = index; trackBy: trackBySongId" 
-               [routerLink]="['/song', song.id]" 
+               [routerLink]="isSongHidden(song) ? null : ['/song', song.id]" 
+               [class.cursor-not-allowed]="isSongHidden(song)"
+               [class.opacity-40]="isSongHidden(song)"
+               [class.hover:bg-white/[0.03]]="isSongHidden(song)"
+               [class.hover:border-white/5]="isSongHidden(song)"
+               [class.hover:-translate-y-0]="isSongHidden(song)"
                class="group relative cursor-pointer rounded-xl bg-white/[0.03] border border-white/5 p-3.5 text-left transition-all duration-300 hover:bg-white/[0.08] hover:border-white/10 hover:-translate-y-1 shadow-lg">
             
             <div class="relative aspect-square overflow-hidden rounded-lg bg-[#24242d] shadow-md">
               <img [src]="song.coverUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=100&auto=format&fit=crop'" 
                    [alt]="song.title" 
-                   class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                   [class.grayscale]="isSongHidden(song)"
+                   [class.opacity-30]="isSongHidden(song)"
+                   [class.group-hover:scale-105]="!isSongHidden(song)"
+                   class="h-full w-full object-cover transition-transform duration-500" />
               
-              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <div *ngIf="!isSongHidden(song)" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span (click)="playSong(song, recentSongs); $event.stopPropagation()" 
                       class="flex h-11 w-11 items-center justify-center rounded-full bg-[#1ed760] text-black shadow-xl transform scale-90 group-hover:scale-100 transition-transform duration-300 hover:scale-105 active:scale-95 cursor-pointer"
                       title="Phát nhạc">
                   <i class='bx bx-play text-2xl ml-0.5'></i>
+                </span>
+              </div>
+
+              <!-- Block Icon Overlay if hidden -->
+              <div *ngIf="isSongHidden(song)" class="absolute inset-0 bg-black/75 flex flex-col items-center justify-center gap-1.5 p-2 text-center">
+                <div class="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <i class='bx bx-low-vision text-red-500 text-lg animate-pulse'></i>
+                </div>
+                <span class="px-2 py-0.5 bg-red-500/20 border border-red-500/30 text-red-500 rounded text-[9px] font-extrabold tracking-widest uppercase">
+                  Đã ẩn
                 </span>
               </div>
 
@@ -454,15 +532,17 @@
                 <i class='bx text-sm' [ngClass]="isSongLiked(song) ? 'bxs-heart' : 'bx-heart'"></i>
               </button>
               
-              <span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/60 text-[9px] font-extrabold text-white/90">
-                #{{ (currentPage - 1) * likedPageSize + i + 1 }}
-              </span>
+
             </div>
 
-            <h3 class="mt-3 truncate text-sm font-bold text-white group-hover:text-[#1ed760] transition-colors" [title]="song.title">{{ song.title }}</h3>
+            <h3 class="mt-3 truncate text-sm font-bold text-white transition-colors"
+                [class.text-gray-500]="isSongHidden(song)"
+                [class.group-hover:text-gray-500]="isSongHidden(song)"
+                [class.group-hover:text-[#1ed760]]="!isSongHidden(song)"
+                [title]="song.title">{{ song.title }}</h3>
             
             <div class="mt-1 flex items-center justify-between text-xs text-gray-400">
-              <span class="truncate font-semibold max-w-[95px]">{{ song.artist }}</span>
+              <span class="truncate font-semibold max-w-[95px]" [class.text-gray-600]="isSongHidden(song)">{{ song.artist }}</span>
               <span class="font-medium shrink-0 bg-white/5 px-1.5 py-0.5 rounded text-[10px]">{{ song.duration }}</span>
             </div>
           </div>

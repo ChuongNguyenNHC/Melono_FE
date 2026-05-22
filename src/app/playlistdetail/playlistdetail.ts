@@ -172,7 +172,9 @@ export class PlaylistDetail implements OnInit, OnDestroy {
             ...this.localPlaylist!,
             name: this.editingName.trim(),
             status: this.editingStatus,
+            coverUrl: updatedPlaylist.coverUrl,
           };
+          this.editingCoverUrl = updatedPlaylist.coverUrl || '';
           this.playlistData = this.buildLocalPlaylistData(this.localPlaylist);
           this.shareMessage = 'Đã lưu thay đổi';
           this.cdr.detectChanges();
@@ -254,6 +256,22 @@ export class PlaylistDetail implements OnInit, OnDestroy {
         next: () => {
           console.log(`%c[UI - Playlist Detail] Đã xóa bài hát khỏi backend playlist thành công!`, 'color: #2ecc71; font-weight: bold;');
           this.songs = this.songs.filter(s => s.id !== song.id);
+          
+          // Tải lại thông tin playlist để cập nhật coverUrl mới từ backend sau khi xóa
+          this.playlistService.getPlaylistById(idStr).subscribe({
+            next: (updatedPlaylist) => {
+              if (this.localPlaylist) {
+                this.localPlaylist.coverUrl = updatedPlaylist.coverUrl;
+                this.editingCoverUrl = updatedPlaylist.coverUrl || '';
+                this.playlistData = {
+                  ...this.playlistData,
+                  coverUrl: updatedPlaylist.coverUrl
+                };
+                this.cdr.detectChanges();
+              }
+            }
+          });
+          
           this.cdr.detectChanges();
         },
         error: (err) => console.error('Error removing song from playlist', err)
@@ -379,21 +397,12 @@ export class PlaylistDetail implements OnInit, OnDestroy {
           this.playlistService.getPlaylistSongs(playlist.playlistId!).subscribe({
             next: (songs) => {
               this.songs = this.sortSongs(songs);
-              // Tự động sinh coverUrl cho backend playlist dựa vào bài hát cuối cùng
-              if (songs && songs.length > 0) {
-                const lastSong = songs[songs.length - 1];
-                this.editingCoverUrl = lastSong.coverUrl || '';
-                this.playlistData = {
-                  ...this.playlistData,
-                  coverUrl: lastSong.coverUrl
-                };
-              } else {
-                this.editingCoverUrl = '';
-                this.playlistData = {
-                  ...this.playlistData,
-                  coverUrl: undefined
-                };
-              }
+              // Giữ nguyên coverUrl từ backend thay vì tự động ghi đè bằng bài hát cuối cùng
+              this.editingCoverUrl = playlist.coverUrl || '';
+              this.playlistData = {
+                ...this.playlistData,
+                coverUrl: playlist.coverUrl
+              };
               this.cdr.detectChanges();
             },
             error: (err) => console.error('Error fetching playlist songs from backend', err)

@@ -24,16 +24,23 @@
         <!-- Left Column: Avatar & Quick Info Card -->
         <div class="md:col-span-1 flex flex-col items-center p-6 bg-white/5 border border-white/5 rounded-3xl backdrop-blur-xl relative">
           <!-- Avatar Preview -->
-          <div class="relative w-32 h-32 group mb-6">
+          <div class="relative w-32 h-32 group mb-6 cursor-pointer" (click)="fileInput.click()">
             <img 
-              [src]="avatarUrl || 'https://ui-avatars.com/api/?name=' + user.username + '&background=1ed760&color=fff'" 
+              [src]="selectedFilePreview || avatarUrl || 'https://ui-avatars.com/api/?name=' + user.username + '&background=1ed760&color=fff'" 
               alt="Avatar Large" 
               class="w-full h-full object-cover rounded-full border-4 border-white/10 shadow-2xl transition-transform duration-300 group-hover:scale-105"
             />
-            <div class="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
+            <div class="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
               <i class='bx bx-camera text-3xl text-[#1ed760]'></i>
             </div>
           </div>
+          <input 
+            type="file" 
+            #fileInput 
+            (change)="onFileSelected($event)" 
+            accept="image/*" 
+            class="hidden" 
+          />
 
           <h2 class="text-xl font-bold text-center truncate w-full mb-1">{{ user.name }}</h2>
           <p class="text-sm text-gray-400 mb-6 truncate w-full text-center">{{ user.email }}</p>
@@ -128,21 +135,6 @@
                     [value]="user.email" 
                     disabled
                     class="w-full h-12 rounded-xl border border-white/5 bg-white/5 pl-12 pr-4 text-sm text-gray-500 cursor-not-allowed outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label for="avatarUrlInput" class="block text-sm font-bold text-gray-300 mb-2">Đường dẫn ảnh đại diện (Avatar URL)</label>
-                <div class="relative">
-                  <i class='bx bx-link absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg'></i>
-                  <input 
-                    id="avatarUrlInput"
-                    type="text" 
-                    name="avatarUrl"
-                    [(ngModel)]="avatarUrl" 
-                    placeholder="Nhập link ảnh (URL)"
-                    class="w-full h-12 rounded-xl border border-white/10 bg-[#121218] pl-12 pr-4 text-sm text-white outline-none transition focus:border-[#1ed760] focus:bg-[#181822]"
                   />
                 </div>
               </div>

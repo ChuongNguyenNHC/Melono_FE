@@ -33,6 +33,7 @@ export class SongDetail implements OnInit, OnDestroy {
   isPlayingSong = false;
   
   userPlaylists: Playlist[] = [];
+  playlistContainsSongMap: Record<string, boolean> = {};
   showPlaylistDropdown = false;
   showToast = false;
   toastMessage = '';
@@ -62,6 +63,12 @@ export class SongDetail implements OnInit, OnDestroy {
 
     this.songsSub = this.libraryService.songs$.subscribe(songs => {
       if (this.song && this.songId) {
+        // Bỏ qua cập nhật lượt nghe cho nhạc iTunes để giữ nguyên lượt nghe ảo ổn định
+        const isItunes = this.song.source === 'ITUNES' || this.song.itunesId != null || String(this.songId).startsWith('itunes-');
+        if (isItunes) {
+          return;
+        }
+
         const updatedSong = songs.find(s => String(s.id) === String(this.songId));
         if (updatedSong) {
           this.song.plays = this.musicService.getListenCount(updatedSong.id, updatedSong.listenCount);
@@ -262,6 +269,25 @@ export class SongDetail implements OnInit, OnDestroy {
     this.playlistService.getUserPlaylists().subscribe({
       next: (playlists) => {
         this.userPlaylists = playlists;
+        this.playlistContainsSongMap = {};
+        
+        if (this.song && playlists.length > 0) {
+          playlists.forEach(pl => {
+            if (pl.playlistId) {
+              this.playlistService.getPlaylistSongs(pl.playlistId).subscribe({
+                next: (songs) => {
+                  const songIdStr = String(this.song!.id).replace('itunes-', '');
+                  const hasSong = songs.some(s => {
+                    const sIdStr = String(s.id).replace('itunes-', '');
+                    return sIdStr === songIdStr;
+                  });
+                  this.playlistContainsSongMap[pl.playlistId!] = hasSong;
+                  this.cdr.detectChanges();
+                }
+              });
+            }
+          });
+        }
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -296,6 +322,37 @@ export class SongDetail implements OnInit, OnDestroy {
         this.showToastMessage('Lỗi khi thêm bài hát vào danh sách phát.', 'error');
       }
     });
+  }
+
+  toggleSongInPlaylist(playlistId: string | undefined) {
+    if (!this.song || !playlistId) return;
+    
+    const hasSong = this.playlistContainsSongMap[playlistId];
+    if (hasSong) {
+      this.playlistService.removeSongFromPlaylist(playlistId, String(this.song.id)).subscribe({
+        next: () => {
+          this.playlistContainsSongMap[playlistId] = false;
+          this.showToastMessage('Đã xóa bài hát khỏi danh sách phát!', 'success');
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error(err);
+          this.showToastMessage('Lỗi khi xóa bài hát khỏi danh sách phát.', 'error');
+        }
+      });
+    } else {
+      this.playlistService.addSongToPlaylist(playlistId, this.song).subscribe({
+        next: () => {
+          this.playlistContainsSongMap[playlistId] = true;
+          this.showToastMessage('Đã thêm bài hát vào danh sách phát thành công!', 'success');
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error(err);
+          this.showToastMessage('Lỗi khi thêm bài hát vào danh sách phát.', 'error');
+        }
+      });
+    }
   }
 
   private showToastMessage(message: string, type: 'success' | 'error') {

@@ -282,6 +282,22 @@ export class MusicService {
   }
 
   public getListenCount(songId: string, backendCount?: number): string {
+    const idStr = String(songId);
+    let itunesId: string | null = null;
+    if (idStr.startsWith('itunes-')) {
+      itunesId = idStr.replace('itunes-', '');
+    } else {
+      const localSong = this.musicLibraryService.snapshot.songs.find(s => s.id === songId);
+      if (localSong && (localSong.source === 'ITUNES' || localSong.itunesId)) {
+        itunesId = localSong.itunesId || null;
+      }
+    }
+
+    if (itunesId) {
+      // Trả về lượt nghe ảo ổn định cho bài hát iTunes
+      return (Math.abs(parseInt(itunesId) || 0) % 800 + 150) + 'M';
+    }
+
     const count = (backendCount !== undefined && backendCount !== null)
       ? backendCount
       : this.musicLibraryService.snapshot.listenHistory.filter(h => h.songId === songId).length;

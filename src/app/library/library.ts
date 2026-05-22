@@ -148,19 +148,22 @@ export class Library implements OnInit {
     this.musicLibraryService.currentUserLibrary$.subscribe({
       next: (library) => {
         if (library && library.listenHistory) {
-          this.recentSongs = library.listenHistory.map(s => {
-            const isItunes = s.source === 'ITUNES' || s.itunesId != null;
-            return {
-              id: s.id,
-              title: s.title,
-              artist: s.artistName,
-              coverUrl: s.thumbnailUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=100&auto=format&fit=crop',
-              previewUrl: s.previewUrl || s.fileUrl || '',
-              duration: isItunes ? '0:30' : s.duration,
-              plays: s.listenCount ? String(s.listenCount) : '0',
-              itunesId: s.itunesId
-            };
-          });
+          this.recentSongs = library.listenHistory
+            .map(s => {
+              const isItunes = s.source === 'ITUNES' || s.itunesId != null;
+              return {
+                id: s.id,
+                title: s.title,
+                artist: s.artistName,
+                coverUrl: s.thumbnailUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=100&auto=format&fit=crop',
+                previewUrl: s.previewUrl || s.fileUrl || '',
+                duration: isItunes ? '0:30' : s.duration,
+                plays: s.listenCount ? String(s.listenCount) : '0',
+                itunesId: s.itunesId,
+                status: s.status
+              };
+            })
+            .filter(song => song.status !== 'HIDDEN' && (song.status as string) !== 'Hidden');
           this.cdr.detectChanges();
         }
       }
@@ -251,8 +254,15 @@ export class Library implements OnInit {
     });
   }
 
+  isSongHidden(song: Song): boolean {
+    return song.status === 'HIDDEN' || song.status === 'Hidden';
+  }
+
   // Phát nhạc từ danh sách bài hát yêu thích chuẩn hóa
   playSong(song: Song, contextSongs: Song[]): void {
+    if (this.isSongHidden(song)) {
+      return;
+    }
     this.playerService.playSong(song, contextSongs, true);
   }
 
