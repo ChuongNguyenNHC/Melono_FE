@@ -1,3 +1,31 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
 @import 'boxicons/css/boxicons.min.css';
+
+/* Premium Custom Scrollbars for horizontal panels - always visible */
+.scrollbar-hide {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.03);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  height: 6px !important;
+  width: 6px !important;
+  display: block !important;
+}
+
+.scrollbar-hide::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-radius: 4px !important;
+}
+
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35) !important;
+  border-radius: 4px !important;
+  transition: background-color 0.2s ease-in-out !important;
+}
+
+.scrollbar-hide:hover::-webkit-scrollbar-thumb,
+.scrollbar-hide::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.7) !important;
+}

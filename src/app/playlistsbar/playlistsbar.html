@@ -61,7 +61,35 @@
 
   <!-- Playlists Container (Scrollable) -->
   <div class="flex-1 overflow-y-auto px-2 pb-48 scrollbar-hide">
-    <ul class="space-y-1">
+    
+    <!-- Placeholder khi CHƯA ĐĂNG NHẬP -->
+    <ng-container *ngIf="!isLoggedIn">
+      <!-- Khi sidebar mở rộng -->
+      <div *ngIf="isExpanded" class="p-4 mx-2 bg-white/5 rounded-lg border border-white/5 flex flex-col items-center text-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+          <i class='bx bxs-playlist text-gray-400 text-2xl'></i>
+        </div>
+        <div>
+          <h4 class="text-sm font-semibold text-white mb-1">Tạo danh sách phát</h4>
+          <p class="text-xs text-gray-400 mb-3">Vui lòng đăng nhập để tạo và xem danh sách phát của bạn.</p>
+          <a routerLink="/login" class="inline-block px-4 py-2 bg-[#1ed760] text-black text-xs font-bold rounded-full hover:scale-105 active:scale-95 transition-all">
+            Đăng nhập
+          </a>
+        </div>
+      </div>
+
+      <!-- Khi sidebar thu gọn -->
+      <div *ngIf="!isExpanded" class="flex flex-col items-center py-4">
+        <a routerLink="/login" 
+           class="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-colors"
+           title="Đăng nhập để quản lý danh sách phát">
+          <i class='bx bx-log-in text-xl'></i>
+        </a>
+      </div>
+    </ng-container>
+
+    <!-- Danh sách Playlists khi ĐÃ ĐĂNG NHẬP -->
+    <ul *ngIf="isLoggedIn" class="space-y-1">
       <li *ngFor="let playlist of filteredPlaylists">
         <!-- Render normal link if NOT locked -->
         <a *ngIf="!isPlaylistLocked(playlist)" 

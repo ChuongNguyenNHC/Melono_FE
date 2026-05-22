@@ -38,7 +38,7 @@
       <section>
         <div class="mb-6 flex items-center justify-between">
           <h2 class="text-2xl font-bold uppercase">Playlist của bạn ({{ playlists.length }})</h2>
-          <button *ngIf="playlists && playlists.length > 0" type="button" (click)="setViewMode('playlists')" class="text-xs font-bold uppercase tracking-wider text-[#1ed760] transition hover:text-[#1db954] hover:scale-105 active:scale-95 bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-full border border-white/5 shadow-md">
+          <button *ngIf="playlists && playlists.length > 0" type="button" (click)="setViewMode('playlists')" class="text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white">
             Xem tất cả
           </button>
         </div>
@@ -77,7 +77,7 @@
       <section>
         <div class="mb-6 flex items-center justify-between">
           <h2 class="text-2xl font-bold uppercase">Playlist đã theo dõi ({{ followedPlaylists.length }})</h2>
-          <button *ngIf="followedPlaylists && followedPlaylists.length > 0" type="button" (click)="setViewMode('followed')" class="text-xs font-bold uppercase tracking-wider text-[#1ed760] transition hover:text-[#1db954] hover:scale-105 active:scale-95 bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-full border border-white/5 shadow-md">
+          <button *ngIf="followedPlaylists && followedPlaylists.length > 0" type="button" (click)="setViewMode('followed')" class="text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white">
             Xem tất cả
           </button>
         </div>
@@ -144,7 +144,7 @@
       <section>
         <div class="mb-6 flex items-center justify-between">
           <h2 class="text-2xl font-bold uppercase">Bài hát yêu thích của bạn ({{ likedSongs.length }})</h2>
-          <button *ngIf="likedSongs && likedSongs.length > 0" type="button" (click)="setViewMode('liked')" class="text-xs font-bold uppercase tracking-wider text-[#1ed760] transition hover:text-[#1db954] hover:scale-105 active:scale-95 bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-full border border-white/5 shadow-md">
+          <button *ngIf="likedSongs && likedSongs.length > 0" type="button" (click)="setViewMode('liked')" class="text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white">
             Xem tất cả
           </button>
         </div>
@@ -213,7 +213,7 @@
       <section>
         <div class="mb-6 flex items-center justify-between">
           <h2 class="text-2xl font-bold uppercase">Nghe gần đây ({{ recentSongs.length }})</h2>
-          <button *ngIf="recentSongs && recentSongs.length > 0" type="button" (click)="setViewMode('recent')" class="text-xs font-bold uppercase tracking-wider text-[#1ed760] transition hover:text-[#1db954] hover:scale-105 active:scale-95 bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-full border border-white/5 shadow-md">
+          <button *ngIf="recentSongs && recentSongs.length > 0" type="button" (click)="setViewMode('recent')" class="text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white">
             Xem tất cả
           </button>
         </div>
@@ -282,7 +282,7 @@
       <section>
         <div class="mb-6 flex items-center justify-between">
           <h2 class="text-2xl font-bold uppercase">Danh sách phát gợi ý</h2>
-          <button type="button" (click)="toggleShowAllSuggested()" class="text-xs font-bold uppercase tracking-wider text-[#1ed760] transition hover:text-[#1db954] hover:scale-105 active:scale-95 bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-full border border-white/5 shadow-md">
+          <button type="button" (click)="toggleShowAllSuggested()" class="text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white">
             {{ showAllSuggested ? 'Thu gọn' : 'Xem tất cả' }}
           </button>
         </div>

@@ -22,6 +22,10 @@ export class Playlistsbar implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
+  get isLoggedIn(): boolean {
+    return !!this.authService.currentUserValue;
+  }
+
   isPlaylistLocked(playlist: Playlist): boolean {
     const user = this.authService.currentUserValue;
     if (!user) return false;
@@ -60,6 +64,10 @@ export class Playlistsbar implements OnInit {
   }
 
   createPlaylist() {
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/login']);
+      return;
+    }
     const nextNumber = this.playlists.length + 1;
     this.playlistService.createPlaylist(`Danh sách phát #${nextNumber}`, 'PRIVATE').subscribe({
       next: (newPlaylist) => {
