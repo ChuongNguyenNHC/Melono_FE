@@ -156,7 +156,8 @@ export class PlaylistService {
             previewUrl: s.previewUrl || s.fileUrl || '',
             duration: isItunes ? '0:30' : this.formatDuration(s.duration),
             plays: '0',
-            itunesId: s.itunesId
+            itunesId: s.itunesId,
+            status: s.status
           };
         });
 

@@ -251,6 +251,15 @@ export class MusicLibraryService {
   }
 
   recordListen(userId: string, songId: string): void {
+    // Bỏ qua ghi nhận lượt nghe cho bài hát iTunes
+    if (songId.startsWith('itunes-')) {
+      return;
+    }
+    const songInState = this.snapshot.songs.find(s => s.id === songId);
+    if (songInState && (songInState.source === 'ITUNES' || songInState.itunesId)) {
+      return;
+    }
+
     // 1. Cập nhật cục bộ state để UI phản hồi ngay lập tức và tăng listenCount của song
     this.patchState(state => {
       const updatedSongs = state.songs.map(song => {
@@ -547,6 +556,15 @@ export class MusicLibraryService {
 
   unbanUserApi(userId: string): Observable<any> {
     return this.http.put<any>(`http://localhost:8080/api/users/${userId}/unban`, {});
+  }
+
+  updateUserRole(userId: string, role: string): Observable<any> {
+    return this.http.put<any>(`http://localhost:8080/api/users/${userId}/role?role=${role}`, {}).pipe(
+      tap(() => {
+        // Refresh the list of songs in local state because some songs might have been hidden (e.g. demoted artist to user)
+        this.fetchSongsFromBackend();
+      })
+    );
   }
 
   createGenre(name: string, createdBy: GenreCreatorType = 'ADMIN', createdByUserId?: string): void {

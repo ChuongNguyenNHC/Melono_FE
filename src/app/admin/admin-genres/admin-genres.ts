@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MusicGenre } from '../../models/music-domain.models';
+import { MusicLibraryService } from '../../services/music-library.service';
 
 @Component({
   selector: 'app-admin-genres',
@@ -16,10 +17,17 @@ export class AdminGenres {
   @Output() approveGenre = new EventEmitter<string>();
   @Output() deleteGenre = new EventEmitter<string>();
 
+  private readonly libraryService = inject(MusicLibraryService);
+
   genreName = '';
   searchQuery = '';
   currentPage = 1;
   pageSize = 5; // Set to 5 so pagination triggers easily on smaller lists
+
+  getSongCountForGenre(genreId: string): number {
+    const list = this.libraryService.snapshot.songs || [];
+    return list.filter(s => s.genreIds && s.genreIds.includes(genreId)).length;
+  }
 
   submit(): void {
     const name = this.genreName.trim();

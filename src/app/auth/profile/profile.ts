@@ -2,6 +2,7 @@ import { Component, OnInit, NgZone, ChangeDetectorRef, inject } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
+import { UploadService } from '../../services/upload.service';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 
@@ -14,6 +15,7 @@ import Swal from 'sweetalert2';
 })
 export class Profile implements OnInit {
   authService = inject(AuthService);
+  uploadService = inject(UploadService);
   router = inject(Router);
   zone = inject(NgZone);
   cdr = inject(ChangeDetectorRef);
@@ -27,6 +29,10 @@ export class Profile implements OnInit {
   currentPassword?: string = '';
   newPassword?: string = '';
   confirmPassword?: string = '';
+
+  // Avatar upload file state
+  selectedFile: File | null = null;
+  selectedFilePreview: string | null = null;
 
   // Status flags
   isLoading: boolean = false;
@@ -57,6 +63,19 @@ export class Profile implements OnInit {
     this.cdr.detectChanges();
   }
 
+  onFileSelected(event: any) {
+    const file = event.target.files?.[0];
+    if (file) {
+      this.selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.selectedFilePreview = reader.result as string;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   updateProfileInfo() {
     if (!this.user) return;
 
@@ -77,44 +96,66 @@ export class Profile implements OnInit {
     this.isLoading = true;
     this.cdr.detectChanges();
 
-    const updateData: any = {
-      username: this.username.trim(),
-      avatarUrl: this.avatarUrl.trim() || undefined,
+    const proceedUpdate = (finalAvatarUrl: string) => {
+      const updateData: any = {
+        username: this.username.trim(),
+        avatarUrl: finalAvatarUrl || undefined,
+      };
+
+      if (this.user!.role === 'ARTIST') {
+        updateData.stageName = this.stageName.trim();
+      }
+
+      this.authService.updateProfile(this.user!.id, updateData).subscribe({
+        next: () => {
+          this.zone.run(() => {
+            this.isLoading = false;
+            this.selectedFile = null;
+            this.selectedFilePreview = null;
+            this.successMessage = 'Cập nhật hồ sơ thành công!';
+            this.cdr.detectChanges();
+          });
+
+          Swal.fire({
+            title: 'Thành công!',
+            text: 'Thông tin hồ sơ của bạn đã được cập nhật.',
+            icon: 'success',
+            confirmButtonText: 'Đồng ý',
+            confirmButtonColor: '#1ed760',
+            background: '#1c1c28',
+            color: '#ffffff',
+            customClass: {
+              popup: 'rounded-3xl border border-white/5 shadow-2xl font-sans'
+            }
+          });
+        },
+        error: (err) => {
+          this.zone.run(() => {
+            this.isLoading = false;
+            this.errorMessage = err.error?.message || 'Có lỗi xảy ra khi cập nhật hồ sơ.';
+            this.cdr.detectChanges();
+          });
+        }
+      });
     };
 
-    if (this.user.role === 'ARTIST') {
-      updateData.stageName = this.stageName.trim();
+    if (this.selectedFile) {
+      this.uploadService.uploadImage(this.selectedFile).subscribe({
+        next: (res) => {
+          this.avatarUrl = res.url;
+          proceedUpdate(res.url);
+        },
+        error: (err) => {
+          this.zone.run(() => {
+            this.isLoading = false;
+            this.errorMessage = 'Tải ảnh đại diện thất bại.';
+            this.cdr.detectChanges();
+          });
+        }
+      });
+    } else {
+      proceedUpdate(this.avatarUrl.trim());
     }
-
-    this.authService.updateProfile(this.user.id, updateData).subscribe({
-      next: () => {
-        this.zone.run(() => {
-          this.isLoading = false;
-          this.successMessage = 'Cập nhật hồ sơ thành công!';
-          this.cdr.detectChanges();
-        });
-
-        Swal.fire({
-          title: 'Thành công!',
-          text: 'Thông tin hồ sơ của bạn đã được cập nhật.',
-          icon: 'success',
-          confirmButtonText: 'Đồng ý',
-          confirmButtonColor: '#1ed760',
-          background: '#1c1c28',
-          color: '#ffffff',
-          customClass: {
-            popup: 'rounded-3xl border border-white/5 shadow-2xl font-sans'
-          }
-        });
-      },
-      error: (err) => {
-        this.zone.run(() => {
-          this.isLoading = false;
-          this.errorMessage = err.error?.message || 'Có lỗi xảy ra khi cập nhật hồ sơ.';
-          this.cdr.detectChanges();
-        });
-      }
-    });
   }
 
   changePassword() {

@@ -448,6 +448,69 @@ export class Admin {
     });
   }
 
+  onUserRoleChangeFromAdmin(event: { user: UserRecord; role: UserRole }): void {
+    const { user, role } = event;
+    if (user.role === role) return;
+
+    let title = 'Xác nhận thay đổi vai trò';
+    let text = `Bạn có chắc chắn muốn thay đổi vai trò của "${user.name}" thành ${role === 'ARTIST' ? 'Nghệ sĩ' : 'Người dùng'} không?`;
+    let confirmBtnColor = '#1ed760';
+
+    if (user.role === 'ARTIST' && role === 'USER') {
+      title = 'Cảnh báo quan trọng!';
+      text = `Khi chuyển "${user.name}" từ Nghệ sĩ thành Người dùng, TẤT CẢ bài hát thuộc sở hữu của nghệ sĩ này sẽ tự động BỊ ẨN trên hệ thống. Bạn vẫn muốn tiếp tục?`;
+      confirmBtnColor = '#e11d48'; // Rose-600 warning color
+    }
+
+    Swal.fire({
+      title: title,
+      text: text,
+      icon: user.role === 'ARTIST' && role === 'USER' ? 'warning' : 'question',
+      showCancelButton: true,
+      background: '#0f172a',
+      color: '#ffffff',
+      confirmButtonColor: confirmBtnColor,
+      cancelButtonColor: '#334155',
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy bỏ'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.musicLibraryService.updateUserRole(user.id, role).subscribe({
+          next: () => {
+            this.loadUsers();
+            this.syncSongs(); // Update local songs list in UI immediately
+            Swal.fire({
+              title: 'Thành công!',
+              text: `Đã cập nhật vai trò của "${user.name}" thành công.`,
+              icon: 'success',
+              background: '#0f172a',
+              color: '#ffffff',
+              confirmButtonColor: '#1ed760',
+              timer: 2000,
+              timerProgressBar: true
+            });
+          },
+          error: (err: any) => {
+            console.error('Failed to update user role', err);
+            this.loadUsers();
+            const errMsg = err.error?.message || 'Không thể cập nhật vai trò. Vui lòng thử lại.';
+            Swal.fire({
+              title: 'Lỗi!',
+              text: errMsg,
+              icon: 'error',
+              background: '#0f172a',
+              color: '#ffffff',
+              confirmButtonColor: '#1ed760'
+            });
+          }
+        });
+      } else {
+        // Reset state by re-loading users
+        this.loadUsers();
+      }
+    });
+  }
+
   onUserSearchChange(val: string): void {
     this.userSearch = val;
     this.userPage = 0;

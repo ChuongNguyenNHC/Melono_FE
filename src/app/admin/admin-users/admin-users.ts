@@ -34,6 +34,7 @@ export class AdminUsers {
   @Output() ban = new EventEmitter<UserRecord>();
   @Output() unban = new EventEmitter<UserRecord>();
   @Output() pageChange = new EventEmitter<number>();
+  @Output() changeRole = new EventEmitter<{ user: UserRecord; role: UserRole }>();
 
   readonly getUserRoleClass = getUserRoleClass;
   readonly getUserStatusClass = getUserStatusClass;
@@ -46,5 +47,9 @@ export class AdminUsers {
 
   getMin(a: number, b: number): number {
     return Math.min(a, b);
+  }
+
+  onRoleChange(user: UserRecord, role: any): void {
+    this.changeRole.emit({ user, role: role as UserRole });
   }
 }
